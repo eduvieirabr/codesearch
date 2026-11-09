@@ -166,9 +166,23 @@ class IndexStore:
                 sources, scan = self.workspace.scan(cached=cached, force=force)
                 updated = unchanged = 0
                 deleted = sorted(set(old) - sources.keys())
+                search_deletions = set(deleted) | {
+                    path
+                    for path, source in sources.items()
+                    if path in old and old[path]["digest"] != source.digest
+                }
+                if search_deletions:
+                    # FTS5 cannot index equality predicates on its path column.
+                    # Resolve existing row IDs once, then delete by indexed rowid;
+                    # deleting by path per file repeatedly scans all source text.
+                    rowids = [
+                        (row["rowid"],)
+                        for row in self.connection.execute("SELECT rowid,path FROM file_search")
+                        if row["path"] in search_deletions
+                    ]
+                    self.connection.executemany("DELETE FROM file_search WHERE rowid=?", rowids)
                 for path in deleted:
                     self.connection.execute("DELETE FROM files WHERE path=?", (path,))
-                    self.connection.execute("DELETE FROM file_search WHERE path=?", (path,))
                 changes = {"added": [], "modified": [], "deleted": deleted, "reparsed": []}
                 for path, source in sources.items():
                     previous = old.get(path)
@@ -223,7 +237,6 @@ class IndexStore:
                         ),
                     )
                     if not same_content:
-                        self.connection.execute("DELETE FROM file_search WHERE path=?", (path,))
                         self.connection.execute(
                             "INSERT INTO file_search VALUES (?,?)", (path, source.content)
                         )

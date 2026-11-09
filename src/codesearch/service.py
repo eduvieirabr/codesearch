@@ -148,19 +148,25 @@ class CodeSearchService:
         """Scan immediately. Force verifies all content hashes and reparses every admitted file."""
         return self.store.refresh(force=force, interval=0)
 
-    @pinned_tool
     def get_index_status(self) -> dict:
         """Report generation, coverage, persistent diagnostics and scan/read counters."""
-        view = self._view()
+        # The committed report already contains counts from the same transaction.
+        # A status check must not construct a full source/symbol snapshot.
+        report = self.store.refresh(interval=self.scan_interval)
         return {
-            **view.report,
+            **report,
             "workspace": self.workspace.root.name,
-            "symbols": len(view.symbols),
+            "symbols": report["coverage"].get("symbols", 0),
             "scan_interval_seconds": self.scan_interval,
             "limits": {
                 "file_bytes": self.workspace.max_file_bytes,
                 "files": self.workspace.max_files,
                 "total_bytes": self.workspace.max_total_bytes,
+            },
+            "_meta": {
+                "generation": report["generation"],
+                "coverage": report["coverage"],
+                "index_truncated": report["truncated"],
             },
         }
 

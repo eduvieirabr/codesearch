@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -24,6 +25,11 @@ def main():
     parser.add_argument("--max-file-bytes", type=int, default=1024 * 1024)
     parser.add_argument("--max-files", type=int, default=50_000)
     parser.add_argument("--max-total-bytes", type=int, default=128 * 1024 * 1024)
+    parser.add_argument(
+        "--index-only",
+        action="store_true",
+        help="Build the persistent index, print its JSON report and exit without starting MCP",
+    )
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port must be 1..65535")
@@ -45,6 +51,9 @@ def main():
     except (ValueError, OSError) as exc:
         parser.error(str(exc))
     try:
+        if args.index_only:
+            print(json.dumps(service.refresh_index(), ensure_ascii=False))
+            return
         server = create_server(service)
         options = (
             {}

@@ -122,6 +122,37 @@ Clientes que compartilham o volume consultam a revisão persistida mesmo dentro 
 
 O container roda sem root, com fonte e filesystem raiz somente leitura, volume SQLite separado e HTTP publicado em 127.0.0.1. O índice contém cópias do código admitido; trate o volume como dado privado. Exclusões por nome não detectam segredos escritos dentro do código.
 
+## Projetos grandes e timeout no Cursor
+
+`MCP Error -32001: Request timed out` informa que o cliente deixou de esperar a resposta; sozinho, não comprova que o processo caiu. No Cursor, consulte **Output → MCP Logs** para identificar qual chamada expirou ([documentação oficial](https://cursor.com/docs/mcp)). A implementação evita varrer o índice de texto inteiro a cada atualização de arquivo, e `get_index_status` usa os contadores persistidos sem carregar todos os fontes e símbolos. A indexação inicial ainda pode demorar conforme a quantidade de arquivos, as linguagens e o armazenamento.
+
+Para preparar o índice antes de conectar o Cursor, execute `--index-only` no terminal. O comando grava o mesmo índice persistente, imprime um relatório JSON e encerra sem iniciar MCP. Exemplo para permitir até **512 MiB de texto admitido**:
+
+~~~powershell
+uv run codesearch --workspace "C:\caminho\do\projeto" --max-total-bytes 536870912 --index-only
+uv run codesearch --workspace "C:\caminho\do\projeto" --max-total-bytes 536870912 --transport http --port 8091
+~~~
+
+Use a mesma pasta, `--data-dir` (se informado) e os mesmos limites nas duas execuções. No modo stdio, inclua o mesmo `--max-total-bytes` nos argumentos do servidor em `.cursor/mcp.json`. No HTTP, conecte o Cursor a `http://127.0.0.1:8091/mcp` depois da preparação.
+
+Se o servidor já roda em Podman, atualize a imagem com `-Build`, desative temporariamente sua conexão no Cursor e prepare o índice dentro do container, usando seu volume existente:
+
+~~~powershell
+podman exec codesearch-local codesearch --index-only
+~~~
+
+Quando o Podman está no WSL, use `wsl -d Ubuntu-24.04 --exec podman exec codesearch-local codesearch --index-only`. Esses comandos mantêm os limites padrão do launcher, incluindo 128 MiB totais. Para usar limites personalizados em um container, passe os mesmos argumentos ao processo servidor e à pré-indexação; a preparação isolada não altera os limites de um servidor já iniciado. Reative a conexão depois que o comando terminar.
+
+O tamanho total da pasta inclui arquivos excluídos, como dependências e binários. O padrão continua sendo 128 MiB de texto, 50.000 arquivos e 1 MiB por arquivo. Ao atingir o limite, o relatório retorna `status="partial"`, `truncated=true` e `coverage.complete=false`; isso é cobertura parcial. Aumentar o limite exige memória e espaço para o índice. Use `.codesearchignore` para omitir fontes gerados ou dados sem relevância para a consulta.
+
+Benchmark reproduzível de 420 MiB de texto sintético, independente de repositórios privados:
+
+~~~powershell
+uv run python scripts/benchmark_index.py --files 1680 --file-bytes 262144 --max-total-bytes 536870912 --text-only
+~~~
+
+`--text-only` mede varredura e armazenamento. Omita essa opção para gerar Python com uma função por arquivo; nenhuma variante representa todos os custos de parsing de um projeto real.
+
 ## Desenvolvimento e verificação
 
 Python 3.11+ e uv; container Python 3.13. Dependências travadas em uv.lock.
