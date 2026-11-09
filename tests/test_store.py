@@ -1,3 +1,5 @@
+import sqlite3
+
 import pytest
 
 from codesearch.store import IndexStore
@@ -49,3 +51,29 @@ def test_fts_handles_punctuation_and_empty_query(tmp_path):
     assert store.search_text("", 10, 0) == []
     assert store.search_text('" OR *', 10, 0) == []
     store.close()
+
+
+def test_failed_refresh_retains_committed_index_and_releases_progress(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    source = root / "example.py"
+    source.write_text("def original(): pass\n")
+    store = IndexStore(Workspace(root, tmp_path / "data"))
+    try:
+        original = store.refresh()
+        source.write_text("def replacement(): pass\n")
+        store.connection.execute(
+            "CREATE TRIGGER reject_write BEFORE INSERT ON files "
+            "BEGIN SELECT RAISE(ABORT, 'simulated write failure'); END"
+        )
+        with pytest.raises(sqlite3.IntegrityError, match="simulated write failure"):
+            store.refresh()
+        assert store.indexing_status() is None
+        assert store.read_status()["generation"] == original["generation"]
+        assert store.search_text("original", 10, 0)[0]["file"] == "example.py"
+        assert store.search_text("replacement", 10, 0) == []
+        store.connection.execute("DROP TRIGGER reject_write")
+        assert store.refresh()["generation"] > original["generation"]
+        assert store.search_text("replacement", 10, 0)[0]["file"] == "example.py"
+    finally:
+        store.close()

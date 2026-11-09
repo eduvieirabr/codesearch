@@ -79,6 +79,7 @@ def test_index_status_does_not_materialize_source_content(tmp_path):
         assert peak < 1024 * 1024, peak
         (root / "new.py").write_text("def added(): pass\n")
         service.scan_interval = 0
+        service.refresh_index()
         updated = service.get_index_status()
         assert updated["files"] == updated["symbols"] == 13
         assert updated["generation"] > status["generation"]

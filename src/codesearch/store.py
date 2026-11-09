@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import fnmatch
 import json
+import logging
 import os
 import re
 import sqlite3
@@ -18,6 +19,13 @@ from .workspace import SourceFile, Workspace
 
 SCHEMA_VERSION = "2"
 MAX_CHANGES = 100
+logger = logging.getLogger(__name__)
+
+
+class IndexingInProgress(RuntimeError):
+    def __init__(self, report: dict) -> None:
+        super().__init__("Indexing is already in progress; poll get_index_status before retrying")
+        self.report = report
 
 
 def _json(value) -> str:
@@ -87,6 +95,8 @@ class IndexStore:
         with self.connection:
             self.connection.execute("BEGIN")
             self.generation, self.last_report = self._state(self._metadata())
+        self._progress_lock = threading.Lock()
+        self._progress: dict | None = None
 
     def _metadata(self) -> dict[str, str]:
         return dict(self.connection.execute("SELECT key,value FROM meta"))
@@ -127,6 +137,93 @@ class IndexStore:
             self.connection.close()
 
     def refresh(self, force: bool = False, interval: float = 0) -> dict:
+        with self._progress_lock:
+            if self._progress is not None:
+                raise IndexingInProgress(self._progress_report())
+            now = time.monotonic()
+            self._progress = {
+                "phase": "waiting_for_database",
+                "current_file": None,
+                "processed_files": 0,
+                "total_files": None,
+                "started_at": time.time(),
+                "_started": now,
+                "_phase_started": now,
+            }
+        stop_monitor = threading.Event()
+        try:
+            return self._refresh(force, interval, stop_monitor)
+        except BaseException:
+            logger.exception("Indexing failed; the transaction was not committed")
+            raise
+        finally:
+            stop_monitor.set()
+            with self._progress_lock:
+                self._progress = None
+
+    def _progress_report(self) -> dict:
+        """Called under the progress lock; never acquire the database lock here."""
+        progress = self._progress
+        assert progress is not None
+        now = time.monotonic()
+        return {
+            **json.loads(_json(self.last_report)),
+            "status": "indexing",
+            "progress": {
+                **{key: value for key, value in progress.items() if not key.startswith("_")},
+                "elapsed_seconds": round(now - progress["_started"], 3),
+                "phase_elapsed_seconds": round(now - progress["_phase_started"], 3),
+                "counts_scope": "last committed snapshot; current attempt is not committed",
+            },
+        }
+
+    def indexing_status(self) -> dict | None:
+        """Inspect a running attempt without waiting for its database transaction."""
+        with self._progress_lock:
+            return self._progress_report() if self._progress is not None else None
+
+    def read_status(self) -> dict:
+        """Read committed metadata or live progress; never scan or wait on the writer."""
+        running = self.indexing_status()
+        if running is not None:
+            return running
+        # An independent WAL reader also handles a writer starting after the check.
+        # This avoids taking the long-lived writer lock just to inspect its status.
+        database_uri = (self.workspace.data_dir / "index.sqlite3").as_uri() + "?mode=ro"
+        connection = sqlite3.connect(database_uri, uri=True, timeout=1)
+        try:
+            metadata = dict(connection.execute("SELECT key,value FROM meta"))
+            _, report = self._state(metadata)
+            return report
+        finally:
+            connection.close()
+
+    def _set_progress(self, **updates) -> None:
+        with self._progress_lock:
+            if self._progress is not None:
+                if any(
+                    key in updates and updates[key] != self._progress.get(key)
+                    for key in ("phase", "current_file")
+                ):
+                    self._progress["_phase_started"] = time.monotonic()
+                self._progress.update(updates)
+
+    def _log_progress(self, stop: threading.Event) -> None:
+        while not stop.wait(5):
+            report = self.indexing_status()
+            if report is not None and not stop.is_set():
+                progress = report["progress"]
+                logger.info(
+                    "Indexing phase=%s file=%r files=%s/%s elapsed=%.1fs phase_elapsed=%.1fs",
+                    progress["phase"],
+                    progress["current_file"],
+                    progress["processed_files"],
+                    progress["total_files"],
+                    progress["elapsed_seconds"],
+                    progress["phase_elapsed_seconds"],
+                )
+
+    def _refresh(self, force: bool, interval: float, stop_monitor: threading.Event) -> dict:
         with self.lock:
             # Poll the persisted revision even when this client's scan timer has not expired.
             with self.connection:
@@ -141,8 +238,21 @@ class IndexStore:
                 and metadata.get("parser_revision") == parser_revision
             ):
                 return json.loads(_json(self.last_report))
+            if logger.isEnabledFor(logging.INFO):
+                threading.Thread(
+                    target=self._log_progress, args=(stop_monitor,), daemon=True
+                ).start()
+            logger.info(
+                "Indexing started: force=%s generation=%s parser=%s max_files=%s max_total_bytes=%s",
+                force,
+                self.generation,
+                parser_revision,
+                self.workspace.max_files,
+                self.workspace.max_total_bytes,
+            )
             with self.connection:
                 self.connection.execute("BEGIN IMMEDIATE")
+                self._set_progress(phase="loading_index")
                 metadata = self._metadata()
                 revision = int(metadata.get("revision", "0"))
                 old = {
@@ -163,7 +273,17 @@ class IndexStore:
                             ino=identity[1],
                             ctime_ns=identity[4],
                         )
-                sources, scan = self.workspace.scan(cached=cached, force=force)
+                self._set_progress(phase="scanning")
+                sources, scan = self.workspace.scan(
+                    cached=cached, force=force, progress=self._set_progress
+                )
+                self._set_progress(
+                    phase="updating_text_index",
+                    current_file=None,
+                    total_files=len(sources),
+                    scanned_files=len(sources),
+                    scanned_bytes=scan["bytes"],
+                )
                 updated = unchanged = 0
                 deleted = sorted(set(old) - sources.keys())
                 search_deletions = set(deleted) | {
@@ -198,9 +318,11 @@ class IndexStore:
                             "UPDATE files SET size=?,mtime_ns=?,fingerprint=? WHERE path=?",
                             (source.size, source.mtime_ns, _json(source.fingerprint), path),
                         )
+                        self._set_progress(processed_files=updated + unchanged)
                         continue
                     language = EXTENSION_TO_LANGUAGE.get(source.suffix, "text")
                     symbols, imports, diagnostics = [], [], []
+                    self._set_progress(phase="parsing", current_file=path)
                     try:
                         symbols = [
                             asdict(symbol) for symbol in extract_symbols(source, language, path)
@@ -209,12 +331,14 @@ class IndexStore:
                         diagnostics.append(
                             {"file": path, "reason": f"parser: {type(exc).__name__}"}
                         )
+                    self._set_progress(phase="imports")
                     try:
                         imports = extract_import_details(source, language)
                     except Exception as exc:
                         diagnostics.append(
                             {"file": path, "reason": f"imports: {type(exc).__name__}"}
                         )
+                    self._set_progress(phase="writing")
                     self.connection.execute(
                         """INSERT OR REPLACE INTO files
                            (path,language,size,mtime_ns,digest,content,symbols,imports,
@@ -241,6 +365,7 @@ class IndexStore:
                             "INSERT INTO file_search VALUES (?,?)", (path, source.content)
                         )
                     updated += 1
+                    self._set_progress(processed_files=updated + unchanged)
                     if previous is None:
                         changes["added"].append(path)
                     elif not same_content:
@@ -252,6 +377,7 @@ class IndexStore:
                         or previous["diagnostics"] != diagnostics
                     ):
                         changes["reparsed"].append(path)
+                self._set_progress(phase="committing", current_file=None)
                 previous_revision = revision
                 if updated or deleted or revision == 0:
                     revision += 1
@@ -323,6 +449,13 @@ class IndexStore:
                 self._set_meta("report", _json(report))
             self.last_scan = time.monotonic()
             self.generation, self.last_report = revision, report
+            logger.info(
+                "Indexing committed: generation=%s files=%s status=%s truncated=%s",
+                revision,
+                report["files"],
+                report["status"],
+                report["truncated"],
+            )
             return json.loads(_json(report))
 
     def snapshot(self) -> dict:

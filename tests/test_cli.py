@@ -46,7 +46,10 @@ async def test_preindex_persists_snapshot_before_mcp_start(tmp_path):
     async with Client(transport, timeout=30) as client:
         status = (await client.call_tool("get_index_status", {})).data
         assert status["generation"] == indexed["generation"]
-        assert status["read_files"] == status["updated"] == 0
-        assert status["unchanged"] == status["symbols"] == 1
+        assert status["indexed_at"] == indexed["indexed_at"]
+        assert status["symbols"] == 1
         symbols = await client.call_tool("search_symbols", {"query": "ping"})
         assert symbols.data["result_count"] == 1
+        refreshed = (await client.call_tool("get_index_status", {})).data
+        assert refreshed["read_files"] == refreshed["updated"] == 0
+        assert refreshed["unchanged"] == 1

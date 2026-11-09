@@ -246,6 +246,53 @@ def test_toml_quoted_hash_header_and_array_tables_have_ranges(tmp_path):
     assert symbols[4].end_line == 9
 
 
+@pytest.mark.parametrize(
+    "value",
+    ["[\n" + '  "item",\n' * 1000 + "]", '"""\n' + "text\n" * 1000 + '"""'],
+)
+def test_toml_multiline_values_do_not_reparse_growing_prefixes(tmp_path, monkeypatch, value):
+    import codesearch.parser as parser_module
+
+    text = "values = " + value + "\ntail = 1\n"
+    original = parser_module.tomllib.loads
+    parsed_chars = 0
+
+    def measured_loads(document, **kwargs):
+        nonlocal parsed_chars
+        parsed_chars += len(document)
+        assert parsed_chars <= 4 * len(text), "TOML parsing work grows quadratically"
+        return original(document, **kwargs)
+
+    monkeypatch.setattr(parser_module.tomllib, "loads", measured_loads)
+    symbols = extract_symbols(write(tmp_path, "large.toml", text), "toml")
+    assert [symbol.name for symbol in symbols] == ["values", "tail"]
+    assert (
+        text.encode()[symbols[0].start_byte : symbols[0].end_byte].decode()
+        == text.rsplit("\ntail", 1)[0]
+    )
+    assert symbols[1].signature == "tail = 1"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        '[\n "# ]", { key = "[}" },\n [\'literal # ]\'],\n]',
+        "'''first [\n# literal\\\nlast \"'''''",
+        '"""first [\n# text\\\n continued \\"quote\nlast """""',
+        '""""""',
+    ],
+)
+def test_toml_value_boundaries_preserve_quotes_comments_and_nested_arrays(tmp_path, value):
+    text = '"quoted=key" = ' + value + " # comment\ntail = 1\n"
+    symbols = extract_symbols(write(tmp_path, "quoted.toml", text), "toml")
+    assert [symbol.name for symbol in symbols] == ["quoted=key", "tail"]
+    assert (
+        text.encode()[symbols[0].start_byte : symbols[0].end_byte].decode()
+        == text.rsplit("\ntail", 1)[0]
+    )
+    assert symbols[1].signature == "tail = 1"
+
+
 def test_ts_import_equals_require_preserves_namespace_alias(tmp_path):
     path = write(tmp_path, "a.ts", "import Library = require('./library');\n")
     records = imports.extract_import_details(path, "typescript")

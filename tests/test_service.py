@@ -46,6 +46,19 @@ def test_new_tools_and_refresh(service):
     assert service.search_symbols(query="added")["result_count"] == 1
 
 
+def test_status_only_observes_committed_index_without_starting_another_scan(service):
+    initial = service.get_index_status()
+    assert initial["status"] == "not_indexed"
+    assert initial["files"] == 0
+    indexed = service.refresh_index()
+    (service.workspace.root / "new.py").write_text("def added(): pass\n")
+    status = service.get_index_status()
+    assert status["generation"] == indexed["generation"]
+    assert status["files"] == indexed["files"]
+    service.refresh_index()
+    assert service.get_index_status()["files"] == indexed["files"] + 1
+
+
 @pytest.mark.parametrize(
     "path", [".env", "hidden.py", "../outside.py", "/etc/passwd", r"C:\Windows\win.ini"]
 )

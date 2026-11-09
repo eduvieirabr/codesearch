@@ -16,7 +16,7 @@ import yaml
 
 from .grammars import get_parser
 
-PARSER_REVISION = "2-rich-symbols-3"
+PARSER_REVISION = "2-rich-symbols-4"
 
 EXTENSION_TO_LANGUAGE: dict[str, str] = {
     ".py": "python",
@@ -581,6 +581,43 @@ def _unquoted(text: str, wanted: str):
             yield position
 
 
+def _toml_value_end(lines: list[str], start: int) -> int:
+    """Find a validated TOML value's last line in one lexical pass."""
+    quote = None
+    depth = 0
+    for index in range(start, len(lines)):
+        line = lines[index]
+        position = 0
+        while position < len(line):
+            character = line[position]
+            if quote:
+                if quote[0] == '"' and character == "\\":
+                    position += 2
+                    continue
+                if line.startswith(quote, position):
+                    position += len(quote)
+                    if len(quote) == 3:
+                        # Four/five quotes at the end include literal quote characters.
+                        while position < len(line) and line[position] == quote[0]:
+                            position += 1
+                    quote = None
+                    continue
+            elif character == "#":
+                break
+            elif character in "\"'":
+                quote = character * 3 if line.startswith(character * 3, position) else character
+                position += len(quote)
+                continue
+            elif character in "[{":
+                depth += 1
+            elif character in "]}":
+                depth -= 1
+            position += 1
+        if quote is None and depth == 0:
+            return index
+    raise ValueError("Unterminated TOML value")
+
+
 def _toml(source: _Source) -> list[SymbolInfo]:
     tomllib.loads(source.text)  # Reject malformed input instead of inventing ranges.
     lines = source.text.splitlines(keepends=True)
@@ -605,7 +642,9 @@ def _toml(source: _Source) -> list[SymbolInfo]:
             table_parts = _toml_path(raw)
             header = stripped[: close + opening]
             if table_symbol is not None:
-                previous_end = len(source.text[:start].rstrip())
+                previous_end = start
+                while previous_end and source.text[previous_end - 1].isspace():
+                    previous_end -= 1
                 table_symbol.end_byte = source.byte(previous_end)
                 table_symbol.end_line = source.line(
                     max(table_symbol.start_byte, table_symbol.end_byte - 1)
@@ -624,16 +663,9 @@ def _toml(source: _Source) -> list[SymbolInfo]:
             equal = next(_unquoted(line, "="), None)
             if equal is not None:
                 key_parts = _toml_path(line[:equal].strip())
-                value = line
-                while True:
-                    try:
-                        tomllib.loads(value)
-                        break
-                    except tomllib.TOMLDecodeError:
-                        index += 1
-                        if index >= len(lines):
-                            return symbols
-                        value += lines[index]
+                end_index = _toml_value_end(lines, index)
+                value = "".join(lines[index : end_index + 1])
+                index = end_index
                 parent_parts = ([table] if table else []) + key_parts[:-1]
                 symbols.append(
                     source.symbol(

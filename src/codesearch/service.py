@@ -22,7 +22,7 @@ from .retrieval import (
     serialized_size,
     validate_budget,
 )
-from .store import IndexStore
+from .store import IndexingInProgress, IndexStore
 from .workspace import Workspace
 
 MAX_CONTENT = 64_000
@@ -146,13 +146,16 @@ class CodeSearchService:
 
     def refresh_index(self, force: bool = False) -> dict:
         """Scan immediately. Force verifies all content hashes and reparses every admitted file."""
-        return self.store.refresh(force=force, interval=0)
+        try:
+            return self.store.refresh(force=force, interval=0)
+        except IndexingInProgress as exc:
+            return exc.report
 
     def get_index_status(self) -> dict:
-        """Report generation, coverage, persistent diagnostics and scan/read counters."""
+        """Read committed coverage or live indexing progress without starting a scan."""
         # The committed report already contains counts from the same transaction.
         # A status check must not construct a full source/symbol snapshot.
-        report = self.store.refresh(interval=self.scan_interval)
+        report = self.store.read_status()
         return {
             **report,
             "workspace": self.workspace.root.name,

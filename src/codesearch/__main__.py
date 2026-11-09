@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -31,6 +32,9 @@ def main():
         help="Build the persistent index, print its JSON report and exit without starting MCP",
     )
     args = parser.parse_args()
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
     if not 1 <= args.port <= 65535:
         parser.error("port must be 1..65535")
     root = args.workspace.expanduser().resolve()

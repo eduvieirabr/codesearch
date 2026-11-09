@@ -8,6 +8,8 @@ A versão 0.2 oferece **26 ferramentas**, busca por símbolos e texto, contexto 
 
 A correção 0.2.1 fixa Tree-sitter 0.25.2 para evitar uma falha nativa presente em 0.26.0 ao analisar arquivos longos. Depois de atualizar o código, reconstrua a imagem com -Build. Detalhes em [diagnóstico MCP](docs/MCP-FIX.md).
 
+A versão **0.2.2** remove a reanálise repetida de valores TOML multilinha, informa progresso de indexação sem bloquear o status e evita enfileirar indexações duplicadas. `/health` e `codesearch --version` permitem conferir a versão em execução.
+
 Configuração desta máquina: codesearch-local, pasta C:\git\pessoal\codeSearch, MCP em http://127.0.0.1:8091/mcp. Os launchers e exemplos usam a porta 8091 do host; a porta interna do container continua 8090.
 
 ## Iniciar com Podman
@@ -64,7 +66,7 @@ Use repo="local", "." ou o nome da pasta. Caminhos são relativos à pasta, com 
 | index_repo | Compatibilidade: url="." indexa a pasta local |
 | index_directory | Indexa a pasta configurada |
 | refresh_index | Varredura imediata; force=true relê e reprocessa tudo |
-| get_index_status | Cobertura, geração, diagnósticos e leituras realizadas |
+| get_index_status | Estado persistido ou progresso em execução; não inicia varredura |
 | get_index_changes | Última mudança significativa do índice, persistida |
 | get_project_summary | Linguagens, diretórios e prováveis pontos de entrada |
 | get_repo_outline | Contagens de arquivos/símbolos por diretório |
@@ -106,6 +108,8 @@ Chamadas/herança são candidatos sintáticos conservadores, não resultados de 
 
 ## Atualização e limites
 
+`get_index_status` é uma consulta de observação: não varre a pasta nem inicia a indexação. Antes da primeira execução retorna `not_indexed`. Use `index_directory` ou `refresh_index` para iniciar uma varredura explícita.
+
 O serviço verifica alterações sob demanda, normalmente a cada dois segundos. Arquivos admitidos passam novamente pelas regras de exclusão e pela validação de handles. Conteúdo inalterado é reutilizado por fingerprint de dispositivo, inode, tamanho, mtime e ctime; só os demais corpos são relidos. Ignores são relidos separadamente em toda varredura. Não há watcher. Use refresh_index(force=true) para verificar hashes e refazer a extração integralmente.
 
 Clientes que compartilham o volume consultam a revisão persistida mesmo dentro do intervalo. Cada ferramenta composta usa um único snapshot para alinhar símbolos, coordenadas e fonte. Campos _meta/coverage, truncated, timed_out e diagnósticos indicam os limites da resposta. Código malformado permanece disponível para leitura/busca textual, com diagnóstico de parsing.
@@ -123,6 +127,22 @@ Clientes que compartilham o volume consultam a revisão persistida mesmo dentro 
 O container roda sem root, com fonte e filesystem raiz somente leitura, volume SQLite separado e HTTP publicado em 127.0.0.1. O índice contém cópias do código admitido; trate o volume como dado privado. Exclusões por nome não detectam segredos escritos dentro do código.
 
 ## Projetos grandes e timeout no Cursor
+
+### HTTP 200 com keepalives, sem resultado
+
+O HTTP 200 abre o stream MCP; pings SSE de keepalive não são progresso da indexação nem um resultado da ferramenta. A nova geração do índice só é gravada quando a transação termina. Durante uma execução longa ou após um rollback, o banco pode continuar exibindo a geração parcial anterior.
+
+Na versão 0.2.2, consulte `get_index_status` em outra chamada enquanto `index_directory` está pendente. O status retorna `status="indexing"`, com `progress.phase`, `current_file`, `processed_files`, `total_files`, `elapsed_seconds` e `phase_elapsed_seconds`. Durante a varredura também há `scanned_files` e `scanned_bytes`. `files`, `generation`, `truncated` e `coverage` continuam descrevendo o último snapshot confirmado; `progress.counts_scope` deixa essa distinção explícita.
+
+As etapas incluem espera pelo banco (`waiting_for_database`), carregamento do índice (`loading_index`), varredura (`scanning`), parsing (`parsing`), imports (`imports`), escrita (`writing`) e confirmação (`committing`). Chamadas duplicadas de indexação retornam o progresso existente sem agendar outra execução. Consultas de código durante uma indexação ativa retornam um erro orientando a consultar o status e tentar novamente ao concluir, sem servir fontes desatualizados.
+
+O processo CLI registra progresso a cada cinco segundos em **stderr**, incluindo a etapa, o arquivo relativo e o tempo na etapa. Em Podman, use `podman logs --tail 100 codesearch-local`; no WSL, prefixe com `wsl -d Ubuntu-24.04 --exec`. Depois de atualizar e reconstruir, confirme **0.2.2** em `http://127.0.0.1:8091/health`. Se a execução continuar sem avançar, registre o objeto `progress`, os limites informados pelo status e as últimas linhas do log. Não remova o banco anterior para diagnosticar.
+
+O progresso em memória pertence à instância que recebeu a chamada. Uma pré-indexação com `--index-only` em outro processo deve ser acompanhada pelo stderr desse processo. `indexed_at` registra a última varredura confirmada; `generation` só avança quando o conteúdo do índice é atualizado. Manter a mesma contagem de arquivos e `truncated=true` também pode significar que o limite configurado continua sendo atingido, mesmo após uma nova varredura concluir.
+
+Um caso reproduzível corrigido em 0.2.2 é TOML com arrays ou strings multilinha extensos: o parser revalidava prefixos crescentes a cada linha, com custo quadrático. O documento agora é validado uma vez, e os limites de cada valor são encontrados em uma passagem. Isso não confirma, sem o arquivo/etapa do progresso, a causa de todo timeout em projetos reais.
+
+### Preparar o índice pelo terminal
 
 `MCP Error -32001: Request timed out` informa que o cliente deixou de esperar a resposta; sozinho, não comprova que o processo caiu. No Cursor, consulte **Output → MCP Logs** para identificar qual chamada expirou ([documentação oficial](https://cursor.com/docs/mcp)). A implementação evita varrer o índice de texto inteiro a cada atualização de arquivo, e `get_index_status` usa os contadores persistidos sem carregar todos os fontes e símbolos. A indexação inicial ainda pode demorar conforme a quantidade de arquivos, as linguagens e o armazenamento.
 

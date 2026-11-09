@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import stat
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
@@ -135,7 +136,10 @@ class Workspace:
         )
 
     def scan(
-        self, cached: dict[str, SourceFile] | None = None, force: bool = False
+        self,
+        cached: dict[str, SourceFile] | None = None,
+        force: bool = False,
+        progress: Callable[..., None] | None = None,
     ) -> tuple[dict[str, SourceFile], dict]:
         """Rerun admission and verify handles before reusing cached content."""
         cached = cached or {}
@@ -229,6 +233,12 @@ class Workspace:
                         diagnostic(child, "file exceeds size limit")
                         continue
                     relative = child.relative_to(self.root).as_posix()
+                    if progress is not None:
+                        progress(
+                            current_file=relative,
+                            scanned_files=len(files),
+                            scanned_bytes=report["bytes"],
+                        )
                     previous = None if force else cached.get(relative)
                     if child in policies:
                         raw, identity = policies[child]
