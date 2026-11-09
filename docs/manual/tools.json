@@ -1,0 +1,366 @@
+[
+  {
+    "name": "get_project_summary",
+    "group": "Conhecer o projeto",
+    "purpose": "Obter uma visão inicial do workspace: linguagens, diretórios, arquivos, símbolos e prováveis pontos de entrada.",
+    "prompt": "Apresente este projeto e indique por onde começar a leitura.",
+    "args": {
+      "repo": "local"
+    },
+    "parameters": "repo='local'.",
+    "output": "files, symbols, languages, directories, entry_points e _meta.",
+    "note": "Pontos de entrada são sugestões por nome de arquivo. O resumo descreve apenas arquivos admitidos no índice."
+  },
+  {
+    "name": "get_repo_outline",
+    "group": "Conhecer o projeto",
+    "purpose": "Comparar o tamanho dos diretórios e localizar concentrações de código.",
+    "prompt": "Quais diretórios têm mais arquivos e símbolos?",
+    "args": {
+      "repo": "local",
+      "max_results": 20
+    },
+    "parameters": "repo='local', max_results=100, offset=0.",
+    "output": "directories com path, files, symbols e languages; next_offset para continuar.",
+    "note": "As contagens são por diretório do arquivo. Não representam complexidade ou qualidade do código."
+  },
+  {
+    "name": "get_file_tree",
+    "group": "Conhecer o projeto",
+    "purpose": "Navegar pela árvore de arquivos indexados e restringir a exploração a uma área ou linguagem.",
+    "prompt": "Mostre os arquivos Python da pasta shop.",
+    "args": {
+      "repo": "local",
+      "path_prefix": "shop",
+      "language": "python",
+      "max_results": 20
+    },
+    "parameters": "path_prefix='', language=null, max_results=200, offset=0; repo='local'.",
+    "output": "tree com nós de diretório e arquivo, linguagem e tamanho.",
+    "note": "Os filtros são aplicados antes da paginação. Cada página pode conter até 500 arquivos."
+  },
+  {
+    "name": "find_file",
+    "group": "Encontrar código",
+    "purpose": "Localizar arquivos por parte do nome ou padrão glob.",
+    "prompt": "Encontre o arquivo de cálculo de preços.",
+    "args": {
+      "repo": "local",
+      "pattern": "**/pricing.py"
+    },
+    "parameters": "pattern='', max_results=20, offset=0; repo='local'.",
+    "output": "matches com path, language e size.",
+    "note": "Sem metacaracteres, a busca usa parte do nome do arquivo. Use glob para restringir pelo caminho; **/*.py inclui arquivos na raiz."
+  },
+  {
+    "name": "get_file_outline",
+    "group": "Conhecer o projeto",
+    "purpose": "Ler a estrutura de um arquivo sem solicitar todo o seu conteúdo.",
+    "prompt": "Liste as funções de pricing.py com suas linhas e IDs.",
+    "args": {
+      "repo": "local",
+      "file_path": "shop/pricing.py"
+    },
+    "parameters": "file_path relativo, max_results=100, offset=0; repo='local'.",
+    "output": "symbols com name, qualified_name, kind, line, end_line, symbol_id e metadados disponíveis.",
+    "note": "Use symbol_id nas próximas consultas. A riqueza dos metadados depende da linguagem."
+  },
+  {
+    "name": "search_symbols",
+    "group": "Encontrar código",
+    "purpose": "Encontrar funções, classes e outras declarações pelo nome ou por termos relacionados.",
+    "prompt": "Localize calculate_total e guarde seu symbol_id.",
+    "args": {
+      "repo": "local",
+      "query": "calculate_total",
+      "kind": null,
+      "detail_level": "compact"
+    },
+    "parameters": "query='', kind='function', detail_level='standard', max_results=10, offset=0; filtros language, file_pattern e decorator; repo='local'. detail_level: compact, standard ou full.",
+    "output": "results com localização, symbol_id e match_type; result_count é a quantidade da página.",
+    "note": "Nome exato vem antes do ranking BM25. kind=null inclui todas as categorias. Query vazia requer filtro de linguagem, arquivo ou decorator."
+  },
+  {
+    "name": "search_text",
+    "group": "Encontrar código",
+    "purpose": "Encontrar arquivos cujo conteúdo reúne palavras relevantes para uma investigação.",
+    "prompt": "Encontre arquivos que falem de discount e total.",
+    "args": {
+      "repo": "local",
+      "query": "discount total",
+      "language": "python",
+      "max_results": 10
+    },
+    "parameters": "query='', max_results=20, offset=0, language=null, file_pattern=null; repo='local'.",
+    "output": "results com arquivos e trechos classificados pela busca lexical FTS5; result_count e paginação.",
+    "note": "Todas as palavras são exigidas (AND). Não é busca semântica, regex nem uma interface SQL. Para um trecho literal, use grep_content."
+  },
+  {
+    "name": "grep_content",
+    "group": "Encontrar código",
+    "purpose": "Buscar uma mensagem, trecho literal ou expressão regular, com linhas vizinhas e símbolo envolvente.",
+    "prompt": "Onde a mensagem Invalid discount aparece e em qual função?",
+    "args": {
+      "repo": "local",
+      "pattern": "Invalid discount",
+      "path_glob": "**/*.py",
+      "context_lines": 2,
+      "max_chars": 8000
+    },
+    "parameters": "pattern obrigatório na prática; is_regex=false, case_sensitive=false, context_lines=0 (0..10), path_glob=null, max_results=20, offset=0, max_chars=32000; repo='local'.",
+    "output": "matches, linhas/contexto, enclosing_symbol quando disponível, budget, truncated e timed_out.",
+    "note": "Para regex, use is_regex=true, por exemplo pattern='discount|subtotal'. Há timeout e corte por linha; uma resposta parcial não comprova ausência."
+  },
+  {
+    "name": "find_references",
+    "group": "Encontrar código",
+    "purpose": "Levantar ocorrências textuais de um identificador para orientar a leitura e uma possível renomeação.",
+    "prompt": "Liste as ocorrências de calculate_total no código Python.",
+    "args": {
+      "repo": "local",
+      "name": "calculate_total",
+      "path_glob": "**/*.py"
+    },
+    "parameters": "name='', path_glob=null, max_results=20, offset=0; repo='local'.",
+    "output": "references com arquivo, linha e contexto textual da ocorrência.",
+    "note": "Pode incluir declaração, imports e comentários. Não equivale a Find References de um compilador ou language server."
+  },
+  {
+    "name": "get_file_content",
+    "group": "Ler contexto",
+    "purpose": "Ler um intervalo de linhas de um arquivo admitido ou continuar uma leitura cortada.",
+    "prompt": "Mostre as primeiras 30 linhas de pricing.py.",
+    "args": {
+      "repo": "local",
+      "file_path": "shop/pricing.py",
+      "start_line": 1,
+      "end_line": 30,
+      "max_chars": 4000
+    },
+    "parameters": "start_line=1, end_line=null, max_chars=64000 (1..64000), cursor=null, file_path relativo; repo='local'.",
+    "output": "content, start_line, end_line, total_lines, truncated e next_cursor.",
+    "note": "Até 500 linhas por resposta. Passe next_cursor como cursor com o mesmo file_path para continuar, inclusive no meio de uma linha. Se a geração mudar, reinicie a leitura."
+  },
+  {
+    "name": "get_symbol_context",
+    "group": "Ler contexto",
+    "purpose": "Recuperar uma definição pelo nome, com linhas vizinhas; útil para clientes legados.",
+    "prompt": "Leia calculate_total no arquivo pricing.py, com duas linhas ao redor.",
+    "args": {
+      "repo": "local",
+      "name": "calculate_total",
+      "file_path": "shop/pricing.py",
+      "context_lines": 2
+    },
+    "parameters": "name obrigatório, file_path=null, line=null, context_lines=3 (0..50); repo='local'.",
+    "output": "symbol e os campos de leitura de arquivo, incluindo content.",
+    "note": "Se o nome for ambíguo, informe file_path e line. Para novos fluxos, prefira get_symbol_source com symbol_id."
+  },
+  {
+    "name": "get_symbol_source",
+    "group": "Ler contexto",
+    "purpose": "Ler o código de um ou vários símbolos já identificados.",
+    "prompt": "Leia a implementação do símbolo calculate_total encontrado na busca.",
+    "args": {
+      "repo": "local",
+      "symbol_ids": [
+        "$calculate_total"
+      ],
+      "max_chars": 8000
+    },
+    "parameters": "symbol_ids obrigatório (1..50), context_lines=0 (0..50), max_chars=64000; repo='local'.",
+    "output": "results com source e localização; errors, error_count, budget e omitted_count.",
+    "note": "IDs duplicados são deduplicados preservando a ordem. Um ID inválido pode gerar erro parcial; confira errors mesmo quando a chamada termina com sucesso."
+  },
+  {
+    "name": "get_context_bundle",
+    "group": "Ler contexto",
+    "purpose": "Reunir definições e imports em uma resposta com tamanho controlado.",
+    "prompt": "Monte o contexto de calculate_total e apply_discount em até 12 mil caracteres.",
+    "args": {
+      "repo": "local",
+      "symbol_ids": [
+        "$calculate_total",
+        "$apply_discount"
+      ],
+      "include_imports": true,
+      "max_chars": 12000
+    },
+    "parameters": "symbol_ids obrigatório (1..50), include_imports=true, max_chars=32000, compact=false; repo='local'.",
+    "output": "results, imports, errors, budget, omitted_count, omitted_imports e omitted_import_files.",
+    "note": "compact=true traz metadados sem source. O limite considera o JSON completo do resultado, não tokens. Fonte parcial pode ser retomada com get_file_content."
+  },
+  {
+    "name": "assemble_task_context",
+    "group": "Ler contexto",
+    "purpose": "Selecionar símbolos por termos da tarefa e montar um pacote de contexto em uma chamada.",
+    "prompt": "Reúna contexto para investigar calculate_total e apply_discount.",
+    "args": {
+      "repo": "local",
+      "task": "calculate_total apply_discount",
+      "max_symbols": 4,
+      "max_chars": 12000
+    },
+    "parameters": "task obrigatório (1..2000 caracteres), max_symbols=8 (1..30), max_chars=32000; repo='local'.",
+    "output": "query, basis='lexical_symbol_ranking' e campos do pacote de contexto.",
+    "note": "A seleção é lexical, sem inferência de IA. Inclua nomes e palavras usados no código; uma frase em português pode não encontrar identificadores em inglês."
+  },
+  {
+    "name": "get_file_imports",
+    "group": "Analisar impacto",
+    "purpose": "Examinar os imports declarados por um arquivo, incluindo aliases e evidências quando solicitado.",
+    "prompt": "Quais imports o checkout declara? Mostre os detalhes.",
+    "args": {
+      "repo": "local",
+      "file_path": "shop/checkout.py",
+      "detailed": true
+    },
+    "parameters": "file_path relativo, detailed=false, max_results=100, offset=0; repo='local'.",
+    "output": "imports com registros de origem; detailed=true acrescenta nomes originais/locais e evidências disponíveis.",
+    "note": "Um registro de import não garante uma dependência local resolvida. Consulte o grafo e unresolved para essa distinção."
+  },
+  {
+    "name": "find_importers",
+    "group": "Analisar impacto",
+    "purpose": "Encontrar arquivos que importam diretamente um arquivo local.",
+    "prompt": "Quem importa pricing.py diretamente?",
+    "args": {
+      "repo": "local",
+      "file_path": "shop/pricing.py"
+    },
+    "parameters": "file_path obrigatório, max_results=100, offset=0; repo='local'.",
+    "output": "importers, evidências e diagnósticos de resolução.",
+    "note": "Na demo, checkout.py é um importador direto. api.py é dependente transitivo e aparece em get_blast_radius com profundidade suficiente."
+  },
+  {
+    "name": "get_dependency_graph",
+    "group": "Analisar impacto",
+    "purpose": "Explorar dependências locais entre arquivos em uma ou ambas as direções.",
+    "prompt": "Mostre a cadeia de dependências da API até duas etapas.",
+    "args": {
+      "repo": "local",
+      "file_path": "shop/api.py",
+      "direction": "imports",
+      "depth": 2,
+      "max_nodes": 30,
+      "max_edges": 50
+    },
+    "parameters": "file_path=null, direction='imports' (imports, importers, both), depth=1 (0..20), max_nodes=200 (1..1000), max_edges=500 (1..5000); repo='local'.",
+    "output": "nodes, edges, total_files, total_edges, truncated, depth_limited e unresolved.",
+    "note": "Sem file_path, considera o grafo global sob limites de nós/arestas; depth não restringe essa visão. Arestas representam imports locais resolvidos estaticamente."
+  },
+  {
+    "name": "get_blast_radius",
+    "group": "Analisar impacto",
+    "purpose": "Levantar arquivos potencialmente afetados pela alteração de um módulo, seguindo importadores diretos e transitivos.",
+    "prompt": "Se eu mudar pricing.py, quais arquivos devo revisar e testar?",
+    "args": {
+      "repo": "local",
+      "file_path": "shop/pricing.py",
+      "depth": 3
+    },
+    "parameters": "file_path obrigatório, depth=3 (0..20), max_results=100, offset=0; repo='local'.",
+    "output": "affected_files com path e distance; depth_limited, truncated e evidências não resolvidas.",
+    "note": "Distância 1 indica importador direto. A lista orienta revisão e testes; não garante impacto em execução nem segurança para apagar código."
+  },
+  {
+    "name": "get_dependency_cycles",
+    "group": "Analisar impacto",
+    "purpose": "Encontrar grupos de dependências circulares no grafo de imports locais.",
+    "prompt": "Há ciclos de importação neste projeto?",
+    "args": {
+      "repo": "local",
+      "max_results": 20
+    },
+    "parameters": "max_results=50, offset=0; repo='local'.",
+    "output": "cycles com files, file_count e files_truncated; paginação e diagnósticos.",
+    "note": "Retorna componentes fortemente conectados, incluindo autoimport explícito. Não enumera cada caminho circular possível."
+  },
+  {
+    "name": "get_call_hierarchy",
+    "group": "Analisar impacto",
+    "purpose": "Explorar candidatos de funções chamadas por um símbolo ou de seus chamadores.",
+    "prompt": "Quais chamadas calculate_total faz?",
+    "args": {
+      "repo": "local",
+      "symbol_id": "$calculate_total",
+      "direction": "callees",
+      "depth": 1
+    },
+    "parameters": "symbol_id obrigatório, direction='both' (callers, callees, both), depth=1 (0..20), max_nodes=100 (1..500); repo='local'.",
+    "output": "nodes, edges, unresolved, semantics, limitations e metadata_missing_count.",
+    "note": "Candidatos sintáticos conservadores. Chamadas dinâmicas, bibliotecas externas e ambiguidades podem ficar sem resolução; não é um rastreamento de execução."
+  },
+  {
+    "name": "get_class_hierarchy",
+    "group": "Analisar impacto",
+    "purpose": "Explorar classes base e subclasses declaradas que possam ser resolvidas estaticamente.",
+    "prompt": "Quais subclasses declaradas de Order foram encontradas?",
+    "args": {
+      "repo": "local",
+      "symbol_id": "$Order",
+      "direction": "subclasses",
+      "depth": 1
+    },
+    "parameters": "symbol_id de classe obrigatório, direction='both' (bases, subclasses, both), depth=1 (0..20), max_nodes=100 (1..500); repo='local'.",
+    "output": "nodes, edges, unresolved, semantics, limitations e metadata_missing_count.",
+    "note": "Procure classes com search_symbols(kind='class') ou kind=null. Bases dinâmicas e ambíguas podem permanecer sem resolução."
+  },
+  {
+    "name": "index_directory",
+    "group": "Manter o índice",
+    "purpose": "Indexar ou atualizar a pasta que já foi configurada ao iniciar o servidor.",
+    "prompt": "Atualize o índice desta pasta local.",
+    "args": {
+      "path": "."
+    },
+    "parameters": "path='.'. Não recebe repo.",
+    "output": "Relatório de varredura, geração e cobertura do índice.",
+    "note": "Não permite selecionar outra pasta do computador. Para trocar de projeto, inicie uma instância apontando para o novo workspace."
+  },
+  {
+    "name": "index_repo",
+    "group": "Manter o índice",
+    "purpose": "Manter compatibilidade com clientes que usam o nome index_repo para indexação local.",
+    "prompt": "Indexe o repositório local configurado.",
+    "args": {
+      "url": ".",
+      "use_ai_summaries": false
+    },
+    "parameters": "url='.', use_ai_summaries=false. Não recebe repo.",
+    "output": "Mesmo tipo de relatório de refresh_index.",
+    "note": "Não clona URLs de GitHub/GitLab. use_ai_summaries é um parâmetro legado aceito e não ativa resumos de IA."
+  },
+  {
+    "name": "refresh_index",
+    "group": "Manter o índice",
+    "purpose": "Verificar alterações imediatamente, sem aguardar o intervalo de varredura sob demanda.",
+    "prompt": "Acabei de salvar uma alteração. Atualize o índice agora.",
+    "args": {
+      "force": false
+    },
+    "parameters": "force=false. Não recebe repo. force=true verifica hashes e reprocessa todos os arquivos admitidos.",
+    "output": "Relatório com geração, leituras, arquivos reprocessados, cobertura e diagnósticos.",
+    "note": "A atualização normal reaproveita conteúdo inalterado. Use force=true para uma verificação integral; não é necessário a cada consulta."
+  },
+  {
+    "name": "get_index_status",
+    "group": "Manter o índice",
+    "purpose": "Conferir a saúde, os limites e a cobertura do índice antes de confiar nos resultados.",
+    "prompt": "O índice está completo? Existem erros de parsing ou limites atingidos?",
+    "args": {},
+    "parameters": "Sem argumentos.",
+    "output": "generation, coverage, diagnósticos, contadores, limits e scan_interval_seconds.",
+    "note": "complete=false pode refletir arquivos apenas textuais ou extração parcial. Leia os contadores e diagnósticos; não significa automaticamente indisponibilidade do servidor."
+  },
+  {
+    "name": "get_index_changes",
+    "group": "Manter o índice",
+    "purpose": "Consultar a última mudança significativa detectada nos arquivos indexados.",
+    "prompt": "Quais arquivos mudaram na última atualização significativa do índice?",
+    "args": {},
+    "parameters": "Sem argumentos.",
+    "output": "Delta persistido de arquivos adicionados, alterados ou removidos e metadados disponíveis.",
+    "note": "Não é git diff, histórico de commits nem acompanhamento de todas as edições. Varreduras sem mudança preservam o último delta significativo."
+  }
+]

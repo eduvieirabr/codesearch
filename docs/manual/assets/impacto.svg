@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc">
+  <title id="title">Imports e impacto potencial na loja de demonstração</title>
+  <desc id="desc">api.py importa checkout.py, que importa pricing.py. Alterar pricing.py sugere revisar checkout.py a distância um e api.py a distância dois. O diagrama mostra dependências estáticas, não uma previsão de execução.</desc>
+  <defs><marker id="end" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#6d685d" stroke-width="1.5"/></marker><marker id="back" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#7554aa" stroke-width="1.5"/></marker></defs>
+  <rect width="1200" height="400" rx="24" fill="#f2eee5"/>
+  <g font-family="Segoe UI,Arial,sans-serif" fill="#343b31">
+    <text x="36" y="46" font-size="13" font-weight="700" letter-spacing="2">03 / ANÁLISE DE IMPACTO</text>
+    <text x="36" y="88" font-size="27" font-weight="600">O que revisar ao mudar a regra de preços?</text>
+    <g stroke="#c5c6b8" fill="#fffdf8"><rect x="50" y="151" width="275" height="100" rx="15"/><rect x="462" y="151" width="275" height="100" rx="15"/></g>
+    <rect x="874" y="151" width="276" height="100" rx="15" fill="#d6edb9" stroke="#86a35f"/>
+    <g font-size="24" font-weight="600"><text x="77" y="191">shop/api.py</text><text x="489" y="191">shop/checkout.py</text><text x="901" y="191">shop/pricing.py</text></g>
+    <g font-size="15" fill="#59604f"><text x="77" y="224">Dependente transitivo · dist. 2</text><text x="489" y="224">Importador direto · dist. 1</text><text x="901" y="224">Arquivo alterado</text></g>
+    <g stroke="#6d685d" stroke-width="2" fill="none" marker-end="url(#end)"><path d="M341 183H445"/><path d="M753 183H857"/></g>
+    <g font-size="14" fill="#646357"><text x="369" y="167">importa</text><text x="781" y="167">importa</text></g>
+    <g fill="none" stroke="#7554aa" stroke-width="2" marker-end="url(#back)"><path d="M1012 264V307H600V264"/><path d="M585 307H188V264"/></g>
+    <text x="350" y="341" font-size="17" fill="#7554aa">get_blast_radius segue o caminho inverso dos imports</text>
+    <text x="36" y="380" font-size="14" fill="#656759">Impacto potencial orienta revisão e testes. Relações não resolvidas e uso em execução exigem análise adicional.</text>
+  </g>
+</svg>

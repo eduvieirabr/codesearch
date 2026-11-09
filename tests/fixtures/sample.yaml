@@ -1,0 +1,6 @@
+dag_id: load_bronze_sales
+schedule: "@daily"
+description: Load raw sales data into bronze layer
+tasks:
+  - task_id: extract
+    operator: PythonOperator

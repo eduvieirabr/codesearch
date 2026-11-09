@@ -1,0 +1,12 @@
+{
+  "title": "SalesRecord",
+  "type": "object",
+  "properties": {
+    "id": {"type": "integer"},
+    "amount": {"type": "number"}
+  },
+  "definitions": {
+    "Address": {"type": "object", "properties": {}},
+    "Product": {"type": "object", "properties": {}}
+  }
+}

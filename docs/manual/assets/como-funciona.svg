@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="410" viewBox="0 0 1200 410" role="img" aria-labelledby="title desc">
+  <title id="title">Do pedido do desenvolvedor à evidência no código</title>
+  <desc id="desc">O desenvolvedor conversa com o cliente de IA. O cliente chama o codeSearch por MCP. O servidor lê o workspace e mantém um índice SQLite separado. Trechos retornam ao cliente, que pode usar um modelo remoto.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8" fill="none" stroke="#497168" stroke-width="1.5"/></marker></defs>
+  <rect width="1200" height="410" rx="24" fill="#edf2e9"/>
+  <g font-family="Segoe UI,Arial,sans-serif" fill="#173d35">
+    <text x="36" y="45" font-size="13" font-weight="700" letter-spacing="2">01 / COMO FUNCIONA</text>
+    <text x="36" y="86" font-size="27" font-weight="600">Uma pergunta. Evidências localizadas no projeto.</text>
+    <g fill="#fffdf7" stroke="#b7c8b7"><rect x="36" y="132" width="222" height="135" rx="14"/><rect x="330" y="132" width="222" height="135" rx="14"/><rect x="624" y="132" width="222" height="135" rx="14"/><rect x="918" y="118" width="246" height="90" rx="14"/><rect x="918" y="230" width="246" height="75" rx="14"/></g>
+    <text x="57" y="167" font-size="13" fill="#61736b">VOCÊ</text><text x="57" y="199" font-size="21" font-weight="600">Desenvolvedor</text><text x="57" y="234" font-size="15">“Onde está esta regra?”</text>
+    <text x="351" y="167" font-size="13" fill="#61736b">CLIENTE MCP</text><text x="351" y="199" font-size="21" font-weight="600">Assistente de IA</text><text x="351" y="234" font-size="15">Seleciona as ferramentas</text>
+    <text x="645" y="167" font-size="13" fill="#61736b">SERVIDOR LOCAL</text><text x="645" y="199" font-size="21" font-weight="600">codeSearch</text><text x="645" y="234" font-size="15">Busca e monta contexto</text>
+    <text x="940" y="151" font-size="20" font-weight="600">Pasta do projeto</text><text x="940" y="181" font-size="15">Fonte somente para leitura</text>
+    <text x="940" y="260" font-size="20" font-weight="600">Índice SQLite</text><text x="940" y="287" font-size="15">Persistido em local separado</text>
+    <g stroke="#497168" stroke-width="2" fill="none" marker-end="url(#arrow)"><path d="M271 192H315"/><path d="M565 192H609"/><path d="M859 167H902"/><path d="M859 249H902"/></g>
+    <text x="577" y="173" font-size="12">MCP</text>
+    <path d="M735 282V332H441V282" fill="none" stroke="#497168" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="480" y="358" font-size="16">Arquivos, linhas, símbolos e limites explícitos</text>
+    <text x="36" y="391" font-size="13" fill="#56675f">A busca é local. O cliente pode enviar os trechos recuperados ao provedor de IA que você utiliza.</text>
+  </g>
+</svg>

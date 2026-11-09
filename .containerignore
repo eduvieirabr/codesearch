@@ -1,0 +1,13 @@
+*
+!Containerfile
+!pyproject.toml
+!uv.lock
+!README.md
+!src/
+!src/**
+!tests/
+!tests/**
+!scripts/
+!scripts/**
+src/**/__pycache__/
+tests/**/__pycache__/

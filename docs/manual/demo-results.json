@@ -1,0 +1,3011 @@
+{
+  "version": "0.2.1",
+  "recorded_at_utc": "2026-11-09T00:41:30.055357+00:00",
+  "transport": "stdio",
+  "workspace": "examples/manual-project (temporary copy)",
+  "source_execution": false,
+  "tool_count": 26,
+  "call_count": 39,
+  "checks": [
+    "26 tools via MCP stdio",
+    "direct and transitive importers",
+    "import cycle",
+    "call and class candidates",
+    "JSON budget",
+    "pagination",
+    "source cursor",
+    "partial ID error",
+    "incremental refresh",
+    "resource and prompt discovery"
+  ],
+  "schemas": [
+    {
+      "name": "index_repo",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "default": ".",
+            "type": "string"
+          },
+          "use_ai_summaries": {
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_file_tree",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 200,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          },
+          "path_prefix": {
+            "default": "",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      }
+    },
+    {
+      "name": "get_file_outline",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "file_path": {
+            "default": "",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 100,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "search_symbols",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "query": {
+            "default": "",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 10,
+            "type": "integer"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "function"
+          },
+          "detail_level": {
+            "default": "standard",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "file_pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "decorator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      }
+    },
+    {
+      "name": "get_file_content",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "file_path": {
+            "default": "",
+            "type": "string"
+          },
+          "start_line": {
+            "default": 1,
+            "type": "integer"
+          },
+          "end_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_chars": {
+            "default": 64000,
+            "type": "integer"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      }
+    },
+    {
+      "name": "find_file",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "pattern": {
+            "default": "",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 20,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "grep_content",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "pattern": {
+            "default": "",
+            "type": "string"
+          },
+          "path_glob": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_results": {
+            "default": 20,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          },
+          "is_regex": {
+            "default": false,
+            "type": "boolean"
+          },
+          "case_sensitive": {
+            "default": false,
+            "type": "boolean"
+          },
+          "context_lines": {
+            "default": 0,
+            "type": "integer"
+          },
+          "max_chars": {
+            "default": 32000,
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "find_references",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "type": "string"
+          },
+          "path_glob": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_results": {
+            "default": 20,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_file_imports",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "file_path": {
+            "default": "",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 100,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          },
+          "detailed": {
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "name": "index_directory",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "default": ".",
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "refresh_index",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "force": {
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_index_status",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_project_summary",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "search_text",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "default": "",
+            "type": "string"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 20,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "file_pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        }
+      }
+    },
+    {
+      "name": "get_symbol_context",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "context_lines": {
+            "default": 3,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    {
+      "name": "get_symbol_source",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "symbol_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "context_lines": {
+            "default": 0,
+            "type": "integer"
+          },
+          "max_chars": {
+            "default": 64000,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "symbol_ids"
+        ]
+      }
+    },
+    {
+      "name": "get_context_bundle",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "symbol_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "include_imports": {
+            "default": true,
+            "type": "boolean"
+          },
+          "max_chars": {
+            "default": 32000,
+            "type": "integer"
+          },
+          "compact": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "symbol_ids"
+        ]
+      }
+    },
+    {
+      "name": "assemble_task_context",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task": {
+            "type": "string"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "max_chars": {
+            "default": 32000,
+            "type": "integer"
+          },
+          "max_symbols": {
+            "default": 8,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "find_importers",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "type": "string"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 100,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_path"
+        ]
+      }
+    },
+    {
+      "name": "get_dependency_graph",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "direction": {
+            "default": "imports",
+            "type": "string"
+          },
+          "depth": {
+            "default": 1,
+            "type": "integer"
+          },
+          "max_nodes": {
+            "default": 200,
+            "type": "integer"
+          },
+          "max_edges": {
+            "default": 500,
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_blast_radius",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "type": "string"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "depth": {
+            "default": 3,
+            "type": "integer"
+          },
+          "max_results": {
+            "default": 100,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_path"
+        ]
+      }
+    },
+    {
+      "name": "get_dependency_cycles",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 50,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_call_hierarchy",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "symbol_id": {
+            "type": "string"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "direction": {
+            "default": "both",
+            "type": "string"
+          },
+          "depth": {
+            "default": 1,
+            "type": "integer"
+          },
+          "max_nodes": {
+            "default": 100,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "symbol_id"
+        ]
+      }
+    },
+    {
+      "name": "get_class_hierarchy",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "symbol_id": {
+            "type": "string"
+          },
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "direction": {
+            "default": "both",
+            "type": "string"
+          },
+          "depth": {
+            "default": 1,
+            "type": "integer"
+          },
+          "max_nodes": {
+            "default": 100,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "symbol_id"
+        ]
+      }
+    },
+    {
+      "name": "get_repo_outline",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repo": {
+            "default": "local",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 100,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_index_changes",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    }
+  ],
+  "recordings": [
+    {
+      "tool": "get_project_summary",
+      "args": {
+        "repo": "local"
+      },
+      "label": "Apresente este projeto e indique por onde começar a leitura.",
+      "group": "Conhecer o projeto",
+      "result": {
+        "repo": "local",
+        "workspace": "manual-project",
+        "files": 8,
+        "symbols": 11,
+        "languages": {
+          "markdown": 1,
+          "python": 7
+        },
+        "directories": {
+          "shop": 7,
+          ".": 1
+        },
+        "entry_points": [
+          "README.md"
+        ],
+        "truncated": false,
+        "reference_semantics": "textual identifiers and conservative static candidates; not compiler-resolved",
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_repo_outline",
+      "args": {
+        "repo": "local",
+        "max_results": 20
+      },
+      "label": "Quais diretórios têm mais arquivos e símbolos?",
+      "group": "Conhecer o projeto",
+      "result": {
+        "repo": "local",
+        "directories": [
+          {
+            "path": ".",
+            "files": 1,
+            "symbols": 1,
+            "languages": {
+              "markdown": 1
+            }
+          },
+          {
+            "path": "shop",
+            "files": 7,
+            "symbols": 10,
+            "languages": {
+              "python": 7
+            }
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_file_tree",
+      "args": {
+        "repo": "local",
+        "path_prefix": "shop",
+        "language": "python",
+        "max_results": 20
+      },
+      "label": "Mostre os arquivos Python da pasta shop.",
+      "group": "Conhecer o projeto",
+      "result": {
+        "repo": "local",
+        "tree": [
+          {
+            "path": "shop",
+            "type": "dir",
+            "children": [
+              {
+                "path": "shop/__init__.py",
+                "type": "file",
+                "language": "python",
+                "size": 58
+              },
+              {
+                "path": "shop/api.py",
+                "type": "file",
+                "language": "python",
+                "size": 209
+              },
+              {
+                "path": "shop/checkout.py",
+                "type": "file",
+                "language": "python",
+                "size": 251
+              },
+              {
+                "path": "shop/cycle_a.py",
+                "type": "file",
+                "language": "python",
+                "size": 145
+              },
+              {
+                "path": "shop/cycle_b.py",
+                "type": "file",
+                "language": "python",
+                "size": 145
+              },
+              {
+                "path": "shop/models.py",
+                "type": "file",
+                "language": "python",
+                "size": 274
+              },
+              {
+                "path": "shop/pricing.py",
+                "type": "file",
+                "language": "python",
+                "size": 484
+              }
+            ]
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "find_file",
+      "args": {
+        "repo": "local",
+        "pattern": "**/pricing.py"
+      },
+      "label": "Encontre o arquivo de cálculo de preços.",
+      "group": "Encontrar código",
+      "result": {
+        "repo": "local",
+        "matches": [
+          {
+            "path": "shop/pricing.py",
+            "language": "python",
+            "size": 484
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_file_outline",
+      "args": {
+        "repo": "local",
+        "file_path": "shop/pricing.py"
+      },
+      "label": "Liste as funções de pricing.py com suas linhas e IDs.",
+      "group": "Conhecer o projeto",
+      "result": {
+        "file": "shop/pricing.py",
+        "symbols": [
+          {
+            "name": "apply_discount",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 4,
+            "signature": "def apply_discount(subtotal: int, percent: int) -> int",
+            "summary": "Apply an integer discount percentage.",
+            "end_line": 8,
+            "qualified_name": "apply_discount",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "docstring": "Apply an integer discount percentage.",
+            "bases": [],
+            "calls": [
+              "ValueError"
+            ],
+            "start_byte": 49,
+            "end_byte": 285,
+            "source_start_line": 4,
+            "symbol_id": "sym_81859398a791c16e8ceb4fbef5c9a321",
+            "id": "shop/pricing.py:4"
+          },
+          {
+            "name": "calculate_total",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 11,
+            "signature": "def calculate_total(prices: list[int], discount: int=0) -> int",
+            "summary": "Calculate the discounted total for a checkout.",
+            "end_line": 14,
+            "qualified_name": "calculate_total",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "docstring": "Calculate the discounted total for a checkout.",
+            "bases": [],
+            "calls": [
+              "sum",
+              "apply_discount"
+            ],
+            "start_byte": 288,
+            "end_byte": 483,
+            "source_start_line": 11,
+            "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "id": "shop/pricing.py:11"
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "search_symbols",
+      "args": {
+        "repo": "local",
+        "query": "calculate_total",
+        "kind": null,
+        "detail_level": "compact"
+      },
+      "label": "Localize calculate_total e guarde seu symbol_id.",
+      "group": "Encontrar código",
+      "result": {
+        "result_count": 1,
+        "results": [
+          {
+            "name": "calculate_total",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 11,
+            "end_line": 14,
+            "qualified_name": "calculate_total",
+            "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "id": "shop/pricing.py:11",
+            "match_type": "exact"
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "search_text",
+      "args": {
+        "repo": "local",
+        "query": "discount total",
+        "language": "python",
+        "max_results": 10
+      },
+      "label": "Encontre arquivos que falem de discount e total.",
+      "group": "Encontrar código",
+      "result": {
+        "results": [
+          {
+            "file": "shop/checkout.py",
+            "snippet": "\"\"\"Checkout orchestration.\"\"\"\n\nfrom .pricing import calculate_[total]\n\n\ndef checkout(prices: list[int], [discount]: int = 0) -> dict:\n    \"\"\"Create a checkout summary in cents.\"\"\"\n    return {\"[total]\": calculate_[total](prices, [discount]), \"currency\": \"BRL\"}\n",
+            "rank": -1.4564599721468947,
+            "snippet_truncated": false
+          },
+          {
+            "file": "shop/pricing.py",
+            "snippet": " … int) -> int:\n    \"\"\"Apply an integer [discount] percentage.\"\"\"\n    if not 0 <= percent <= 100:\n        raise ValueError(\"Invalid [discount] percentage\")\n    return subtotal * (100 - percent) // 100\n\n\ndef calculate_[total](prices: list[int], [discount]: int = 0) -> int … ",
+            "rank": -1.390541564333931,
+            "snippet_truncated": false
+          }
+        ],
+        "result_count": 2,
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "grep_content",
+      "args": {
+        "repo": "local",
+        "pattern": "Invalid discount",
+        "path_glob": "**/*.py",
+        "context_lines": 2,
+        "max_chars": 8000
+      },
+      "label": "Onde a mensagem Invalid discount aparece e em qual função?",
+      "group": "Encontrar código",
+      "result": {
+        "repo": "local",
+        "pattern": "Invalid discount",
+        "files_searched": 7,
+        "scope_empty": false,
+        "timed_out": false,
+        "next_offset": null,
+        "truncated": false,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        },
+        "matches": [
+          {
+            "file": "shop/pricing.py",
+            "line": 7,
+            "content": "        raise ValueError(\"Invalid discount percentage\")",
+            "content_truncated": false,
+            "context": [
+              "    \"\"\"Apply an integer discount percentage.\"\"\"",
+              "    if not 0 <= percent <= 100:",
+              "        raise ValueError(\"Invalid discount percentage\")",
+              "    return subtotal * (100 - percent) // 100",
+              ""
+            ],
+            "context_start_line": 5,
+            "symbol": {
+              "id": "shop/pricing.py:4",
+              "symbol_id": "sym_81859398a791c16e8ceb4fbef5c9a321",
+              "name": "apply_discount",
+              "line": 4,
+              "end_line": 8
+            }
+          }
+        ],
+        "budget": {
+          "limit_chars": 8000,
+          "used_chars": 992
+        },
+        "omitted_count": 0
+      }
+    },
+    {
+      "tool": "find_references",
+      "args": {
+        "repo": "local",
+        "name": "calculate_total",
+        "path_glob": "**/*.py"
+      },
+      "label": "Liste as ocorrências de calculate_total no código Python.",
+      "group": "Encontrar código",
+      "result": {
+        "repo": "local",
+        "files_searched": 7,
+        "scope_empty": false,
+        "timed_out": false,
+        "next_offset": null,
+        "truncated": false,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        },
+        "omitted_count": 0,
+        "name": "calculate_total",
+        "references": [
+          {
+            "file": "shop/checkout.py",
+            "line": 3,
+            "content": "from .pricing import calculate_total",
+            "content_truncated": false
+          },
+          {
+            "file": "shop/checkout.py",
+            "line": 8,
+            "content": "    return {\"total\": calculate_total(prices, discount), \"currency\": \"BRL\"}",
+            "content_truncated": false,
+            "symbol": {
+              "id": "shop/checkout.py:6",
+              "symbol_id": "sym_f33824f0c6eae5fd087ccec31e854bab",
+              "name": "checkout",
+              "line": 6,
+              "end_line": 8
+            }
+          },
+          {
+            "file": "shop/pricing.py",
+            "line": 11,
+            "content": "def calculate_total(prices: list[int], discount: int = 0) -> int:",
+            "content_truncated": false,
+            "symbol": {
+              "id": "shop/pricing.py:11",
+              "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+              "name": "calculate_total",
+              "line": 11,
+              "end_line": 14
+            }
+          }
+        ],
+        "budget": {
+          "limit_chars": 32000,
+          "used_chars": 1186
+        }
+      }
+    },
+    {
+      "tool": "get_file_content",
+      "args": {
+        "repo": "local",
+        "file_path": "shop/pricing.py",
+        "start_line": 1,
+        "end_line": 30,
+        "max_chars": 4000
+      },
+      "label": "Mostre as primeiras 30 linhas de pricing.py.",
+      "group": "Ler contexto",
+      "result": {
+        "file": "shop/pricing.py",
+        "content": "\"\"\"Calculate order totals in integer cents.\"\"\"\n\n\ndef apply_discount(subtotal: int, percent: int) -> int:\n    \"\"\"Apply an integer discount percentage.\"\"\"\n    if not 0 <= percent <= 100:\n        raise ValueError(\"Invalid discount percentage\")\n    return subtotal * (100 - percent) // 100\n\n\ndef calculate_total(prices: list[int], discount: int = 0) -> int:\n    \"\"\"Calculate the discounted total for a checkout.\"\"\"\n    subtotal = sum(prices)\n    return apply_discount(subtotal, discount)\n",
+        "start_line": 1,
+        "end_line": 14,
+        "total_lines": 14,
+        "truncated": false,
+        "line_truncated": false,
+        "next_start_line": null,
+        "next_cursor": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_symbol_context",
+      "args": {
+        "repo": "local",
+        "name": "calculate_total",
+        "file_path": "shop/pricing.py",
+        "context_lines": 2
+      },
+      "label": "Leia calculate_total no arquivo pricing.py, com duas linhas ao redor.",
+      "group": "Ler contexto",
+      "result": {
+        "symbol": {
+          "name": "calculate_total",
+          "kind": "function",
+          "file": "shop/pricing.py",
+          "line": 11,
+          "signature": "def calculate_total(prices: list[int], discount: int=0) -> int",
+          "summary": "Calculate the discounted total for a checkout.",
+          "end_line": 14,
+          "qualified_name": "calculate_total",
+          "language": "python",
+          "parent": null,
+          "decorators": [],
+          "docstring": "Calculate the discounted total for a checkout.",
+          "bases": [],
+          "calls": [
+            "sum",
+            "apply_discount"
+          ],
+          "start_byte": 288,
+          "end_byte": 483,
+          "source_start_line": 11,
+          "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+          "id": "shop/pricing.py:11"
+        },
+        "file": "shop/pricing.py",
+        "content": "\n\ndef calculate_total(prices: list[int], discount: int = 0) -> int:\n    \"\"\"Calculate the discounted total for a checkout.\"\"\"\n    subtotal = sum(prices)\n    return apply_discount(subtotal, discount)\n",
+        "start_line": 9,
+        "end_line": 14,
+        "total_lines": 14,
+        "truncated": false,
+        "line_truncated": false,
+        "next_start_line": null,
+        "next_cursor": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "search_symbols",
+      "args": {
+        "query": "calculate_total",
+        "kind": null
+      },
+      "label": "Descobrir o ID de calculate_total",
+      "group": "Preparar IDs",
+      "result": {
+        "result_count": 1,
+        "results": [
+          {
+            "name": "calculate_total",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 11,
+            "signature": "def calculate_total(prices: list[int], discount: int=0) -> int",
+            "summary": "Calculate the discounted total for a checkout.",
+            "end_line": 14,
+            "qualified_name": "calculate_total",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "start_byte": 288,
+            "end_byte": 483,
+            "source_start_line": 11,
+            "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "id": "shop/pricing.py:11",
+            "match_type": "exact"
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_symbol_source",
+      "args": {
+        "repo": "local",
+        "symbol_ids": [
+          "sym_beb8046a7555aa7368865e7a3527eac0"
+        ],
+        "max_chars": 8000
+      },
+      "label": "Leia a implementação do símbolo calculate_total encontrado na busca.",
+      "group": "Ler contexto",
+      "result": {
+        "errors": [],
+        "error_count": 0,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        },
+        "results": [
+          {
+            "name": "calculate_total",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 11,
+            "signature": "def calculate_total(prices: list[int], discount: int=0) -> int",
+            "end_line": 14,
+            "qualified_name": "calculate_total",
+            "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "id": "shop/pricing.py:11",
+            "source_cursor": "eyJnIjoxLCJmIjoic2hvcC9wcmljaW5nLnB5IiwicCI6Mjg4LCJlIjo0ODN9",
+            "source_truncated": false,
+            "next_cursor": null,
+            "source": "def calculate_total(prices: list[int], discount: int = 0) -> int:\n    \"\"\"Calculate the discounted total for a checkout.\"\"\"\n    subtotal = sum(prices)\n    return apply_discount(subtotal, discount)",
+            "source_start_line": 11
+          }
+        ],
+        "budget": {
+          "limit_chars": 8000,
+          "used_chars": 1039
+        },
+        "truncated": false,
+        "omitted_count": 0
+      }
+    },
+    {
+      "tool": "search_symbols",
+      "args": {
+        "query": "apply_discount",
+        "kind": null
+      },
+      "label": "Descobrir o ID de apply_discount",
+      "group": "Preparar IDs",
+      "result": {
+        "result_count": 3,
+        "results": [
+          {
+            "name": "apply_discount",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 4,
+            "signature": "def apply_discount(subtotal: int, percent: int) -> int",
+            "summary": "Apply an integer discount percentage.",
+            "end_line": 8,
+            "qualified_name": "apply_discount",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "start_byte": 49,
+            "end_byte": 285,
+            "source_start_line": 4,
+            "symbol_id": "sym_81859398a791c16e8ceb4fbef5c9a321",
+            "id": "shop/pricing.py:4",
+            "match_type": "exact"
+          },
+          {
+            "name": "discount_percent",
+            "kind": "function",
+            "file": "shop/models.py",
+            "line": 14,
+            "signature": "def discount_percent(self) -> int",
+            "summary": "",
+            "end_line": 15,
+            "qualified_name": "DiscountedOrder.discount_percent",
+            "language": "python",
+            "parent": "DiscountedOrder",
+            "decorators": [],
+            "start_byte": 221,
+            "end_byte": 273,
+            "source_start_line": 14,
+            "symbol_id": "sym_36ed3914cb60d4d785314b24613aee59",
+            "id": "shop/models.py:14",
+            "match_type": "lexical"
+          },
+          {
+            "name": "DiscountedOrder",
+            "kind": "class",
+            "file": "shop/models.py",
+            "line": 11,
+            "signature": "class DiscountedOrder(Order)",
+            "summary": "Order with a discount policy.",
+            "end_line": 15,
+            "qualified_name": "DiscountedOrder",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "start_byte": 146,
+            "end_byte": 273,
+            "source_start_line": 11,
+            "symbol_id": "sym_e2542f94560a3fa9b714c7c16731722c",
+            "id": "shop/models.py:11",
+            "match_type": "lexical"
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_context_bundle",
+      "args": {
+        "repo": "local",
+        "symbol_ids": [
+          "sym_beb8046a7555aa7368865e7a3527eac0",
+          "sym_81859398a791c16e8ceb4fbef5c9a321"
+        ],
+        "include_imports": true,
+        "max_chars": 12000
+      },
+      "label": "Monte o contexto de calculate_total e apply_discount em até 12 mil caracteres.",
+      "group": "Ler contexto",
+      "result": {
+        "errors": [],
+        "error_count": 0,
+        "imports": {
+          "shop/pricing.py": []
+        },
+        "omitted_import_files": 0,
+        "omitted_imports": 0,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        },
+        "truncated": false,
+        "results": [
+          {
+            "name": "calculate_total",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 11,
+            "signature": "def calculate_total(prices: list[int], discount: int=0) -> int",
+            "end_line": 14,
+            "qualified_name": "calculate_total",
+            "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "id": "shop/pricing.py:11",
+            "source_cursor": "eyJnIjoxLCJmIjoic2hvcC9wcmljaW5nLnB5IiwicCI6Mjg4LCJlIjo0ODN9",
+            "source_truncated": false,
+            "next_cursor": null,
+            "source": "def calculate_total(prices: list[int], discount: int = 0) -> int:\n    \"\"\"Calculate the discounted total for a checkout.\"\"\"\n    subtotal = sum(prices)\n    return apply_discount(subtotal, discount)",
+            "source_start_line": 11
+          },
+          {
+            "name": "apply_discount",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 4,
+            "signature": "def apply_discount(subtotal: int, percent: int) -> int",
+            "end_line": 8,
+            "qualified_name": "apply_discount",
+            "symbol_id": "sym_81859398a791c16e8ceb4fbef5c9a321",
+            "id": "shop/pricing.py:4",
+            "source_cursor": "eyJnIjoxLCJmIjoic2hvcC9wcmljaW5nLnB5IiwicCI6NDksImUiOjI4NX0=",
+            "source_truncated": false,
+            "next_cursor": null,
+            "source": "def apply_discount(subtotal: int, percent: int) -> int:\n    \"\"\"Apply an integer discount percentage.\"\"\"\n    if not 0 <= percent <= 100:\n        raise ValueError(\"Invalid discount percentage\")\n    return subtotal * (100 - percent) // 100",
+            "source_start_line": 4
+          }
+        ],
+        "budget": {
+          "limit_chars": 12000,
+          "used_chars": 1828
+        },
+        "omitted_count": 0
+      }
+    },
+    {
+      "tool": "assemble_task_context",
+      "args": {
+        "repo": "local",
+        "task": "calculate_total apply_discount",
+        "max_symbols": 4,
+        "max_chars": 12000
+      },
+      "label": "Reúna contexto para investigar calculate_total e apply_discount.",
+      "group": "Ler contexto",
+      "result": {
+        "errors": [],
+        "error_count": 0,
+        "imports": {
+          "shop/pricing.py": [],
+          "shop/models.py": []
+        },
+        "omitted_import_files": 0,
+        "omitted_imports": 0,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        },
+        "truncated": false,
+        "omitted_count": 0,
+        "query": "calculate_total apply_discount",
+        "basis": "lexical_symbol_ranking",
+        "results": [
+          {
+            "name": "calculate_total",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 11,
+            "signature": "def calculate_total(prices: list[int], discount: int=0) -> int",
+            "end_line": 14,
+            "qualified_name": "calculate_total",
+            "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "id": "shop/pricing.py:11",
+            "source_cursor": "eyJnIjoxLCJmIjoic2hvcC9wcmljaW5nLnB5IiwicCI6Mjg4LCJlIjo0ODN9",
+            "source_truncated": false,
+            "next_cursor": null,
+            "source": "def calculate_total(prices: list[int], discount: int = 0) -> int:\n    \"\"\"Calculate the discounted total for a checkout.\"\"\"\n    subtotal = sum(prices)\n    return apply_discount(subtotal, discount)",
+            "source_start_line": 11
+          },
+          {
+            "name": "apply_discount",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 4,
+            "signature": "def apply_discount(subtotal: int, percent: int) -> int",
+            "end_line": 8,
+            "qualified_name": "apply_discount",
+            "symbol_id": "sym_81859398a791c16e8ceb4fbef5c9a321",
+            "id": "shop/pricing.py:4",
+            "source_cursor": "eyJnIjoxLCJmIjoic2hvcC9wcmljaW5nLnB5IiwicCI6NDksImUiOjI4NX0=",
+            "source_truncated": false,
+            "next_cursor": null,
+            "source": "def apply_discount(subtotal: int, percent: int) -> int:\n    \"\"\"Apply an integer discount percentage.\"\"\"\n    if not 0 <= percent <= 100:\n        raise ValueError(\"Invalid discount percentage\")\n    return subtotal * (100 - percent) // 100",
+            "source_start_line": 4
+          },
+          {
+            "name": "discount_percent",
+            "kind": "function",
+            "file": "shop/models.py",
+            "line": 14,
+            "signature": "def discount_percent(self) -> int",
+            "end_line": 15,
+            "qualified_name": "DiscountedOrder.discount_percent",
+            "symbol_id": "sym_36ed3914cb60d4d785314b24613aee59",
+            "id": "shop/models.py:14",
+            "source_cursor": "eyJnIjoxLCJmIjoic2hvcC9tb2RlbHMucHkiLCJwIjoyMjEsImUiOjI3M30=",
+            "source_truncated": false,
+            "next_cursor": null,
+            "source": "def discount_percent(self) -> int:\n        return 10",
+            "source_start_line": 14
+          },
+          {
+            "name": "DiscountedOrder",
+            "kind": "class",
+            "file": "shop/models.py",
+            "line": 11,
+            "signature": "class DiscountedOrder(Order)",
+            "end_line": 15,
+            "qualified_name": "DiscountedOrder",
+            "symbol_id": "sym_e2542f94560a3fa9b714c7c16731722c",
+            "id": "shop/models.py:11",
+            "source_cursor": "eyJnIjoxLCJmIjoic2hvcC9tb2RlbHMucHkiLCJwIjoxNDYsImUiOjI3M30=",
+            "source_truncated": false,
+            "next_cursor": null,
+            "source": "class DiscountedOrder(Order):\n    \"\"\"Order with a discount policy.\"\"\"\n\n    def discount_percent(self) -> int:\n        return 10",
+            "source_start_line": 11
+          }
+        ],
+        "budget": {
+          "limit_chars": 12000,
+          "used_chars": 3004
+        }
+      }
+    },
+    {
+      "tool": "get_file_imports",
+      "args": {
+        "repo": "local",
+        "file_path": "shop/checkout.py",
+        "detailed": true
+      },
+      "label": "Quais imports o checkout declara? Mostre os detalhes.",
+      "group": "Analisar impacto",
+      "result": {
+        "file": "shop/checkout.py",
+        "imports": [
+          {
+            "name": "calculate_total",
+            "path": ".pricing",
+            "kind": "from",
+            "local_name": "calculate_total",
+            "imported_name": "calculate_total",
+            "line": 3,
+            "dynamic": false
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "find_importers",
+      "args": {
+        "repo": "local",
+        "file_path": "shop/pricing.py"
+      },
+      "label": "Quem importa pricing.py diretamente?",
+      "group": "Analisar impacto",
+      "result": {
+        "file_path": "shop/pricing.py",
+        "total": 1,
+        "truncated": false,
+        "next_offset": null,
+        "importers": [
+          {
+            "path": "shop/checkout.py",
+            "source": "shop/checkout.py",
+            "target": "shop/pricing.py",
+            "evidence": [
+              {
+                "name": "calculate_total",
+                "path": ".pricing",
+                "kind": "from",
+                "local_name": "calculate_total",
+                "imported_name": "calculate_total",
+                "line": 3,
+                "dynamic": false
+              }
+            ],
+            "evidence_count": 1,
+            "evidence_truncated": false
+          }
+        ],
+        "unresolved": [],
+        "unresolved_count": 0,
+        "unresolved_counts": {},
+        "unresolved_truncated": false,
+        "semantics": "Static candidates from admitted snapshot metadata; no compiler resolution. Edges point from importer/caller/derived class to dependency/callee/base class. Unresolved or absent edges do not establish that changes or deletion are safe. External/missing imports were not resolved inside this snapshot and may refer to excluded files. Python package symbols that collide with child modules remain ambiguous. Bash relative source paths require runtime CWD, and bare names can use PATH; neither is proven by this snapshot, so they remain runtime_context without file edges.",
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_dependency_graph",
+      "args": {
+        "repo": "local",
+        "file_path": "shop/api.py",
+        "direction": "imports",
+        "depth": 2,
+        "max_nodes": 30,
+        "max_edges": 50
+      },
+      "label": "Mostre a cadeia de dependências da API até duas etapas.",
+      "group": "Analisar impacto",
+      "result": {
+        "nodes": [
+          {
+            "path": "shop/api.py",
+            "language": "python",
+            "distance": 0
+          },
+          {
+            "path": "shop/checkout.py",
+            "language": "python",
+            "distance": 1
+          },
+          {
+            "path": "shop/pricing.py",
+            "language": "python",
+            "distance": 2
+          }
+        ],
+        "edges": [
+          {
+            "source": "shop/api.py",
+            "target": "shop/checkout.py",
+            "evidence": [
+              {
+                "name": "checkout",
+                "path": ".checkout",
+                "kind": "from",
+                "local_name": "checkout",
+                "imported_name": "checkout",
+                "line": 3,
+                "dynamic": false
+              }
+            ],
+            "evidence_count": 1,
+            "evidence_truncated": false
+          },
+          {
+            "source": "shop/checkout.py",
+            "target": "shop/pricing.py",
+            "evidence": [
+              {
+                "name": "calculate_total",
+                "path": ".pricing",
+                "kind": "from",
+                "local_name": "calculate_total",
+                "imported_name": "calculate_total",
+                "line": 3,
+                "dynamic": false
+              }
+            ],
+            "evidence_count": 1,
+            "evidence_truncated": false
+          }
+        ],
+        "direction": "imports",
+        "depth": 2,
+        "truncated": false,
+        "depth_limited": false,
+        "total_files": 8,
+        "total_edges": 4,
+        "unresolved": [],
+        "unresolved_count": 0,
+        "unresolved_counts": {},
+        "unresolved_truncated": false,
+        "semantics": "Static candidates from admitted snapshot metadata; no compiler resolution. Edges point from importer/caller/derived class to dependency/callee/base class. Unresolved or absent edges do not establish that changes or deletion are safe. External/missing imports were not resolved inside this snapshot and may refer to excluded files. Python package symbols that collide with child modules remain ambiguous. Bash relative source paths require runtime CWD, and bare names can use PATH; neither is proven by this snapshot, so they remain runtime_context without file edges.",
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_blast_radius",
+      "args": {
+        "repo": "local",
+        "file_path": "shop/pricing.py",
+        "depth": 3
+      },
+      "label": "Se eu mudar pricing.py, quais arquivos devo revisar e testar?",
+      "group": "Analisar impacto",
+      "result": {
+        "file_path": "shop/pricing.py",
+        "depth": 3,
+        "depth_limited": false,
+        "total": 2,
+        "truncated": false,
+        "next_offset": null,
+        "affected_files": [
+          {
+            "path": "shop/checkout.py",
+            "distance": 1
+          },
+          {
+            "path": "shop/api.py",
+            "distance": 2
+          }
+        ],
+        "unresolved": [],
+        "unresolved_count": 0,
+        "unresolved_counts": {},
+        "unresolved_truncated": false,
+        "semantics": "Static candidates from admitted snapshot metadata; no compiler resolution. Edges point from importer/caller/derived class to dependency/callee/base class. Unresolved or absent edges do not establish that changes or deletion are safe. External/missing imports were not resolved inside this snapshot and may refer to excluded files. Python package symbols that collide with child modules remain ambiguous. Bash relative source paths require runtime CWD, and bare names can use PATH; neither is proven by this snapshot, so they remain runtime_context without file edges.",
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_dependency_cycles",
+      "args": {
+        "repo": "local",
+        "max_results": 20
+      },
+      "label": "Há ciclos de importação neste projeto?",
+      "group": "Analisar impacto",
+      "result": {
+        "total": 1,
+        "truncated": false,
+        "next_offset": null,
+        "cycles": [
+          {
+            "files": [
+              "shop/cycle_a.py",
+              "shop/cycle_b.py"
+            ],
+            "file_count": 2,
+            "files_truncated": false
+          }
+        ],
+        "unresolved": [],
+        "unresolved_count": 0,
+        "unresolved_counts": {},
+        "unresolved_truncated": false,
+        "semantics": "Static candidates from admitted snapshot metadata; no compiler resolution. Edges point from importer/caller/derived class to dependency/callee/base class. Unresolved or absent edges do not establish that changes or deletion are safe. External/missing imports were not resolved inside this snapshot and may refer to excluded files. Python package symbols that collide with child modules remain ambiguous. Bash relative source paths require runtime CWD, and bare names can use PATH; neither is proven by this snapshot, so they remain runtime_context without file edges.",
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_call_hierarchy",
+      "args": {
+        "repo": "local",
+        "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+        "direction": "callees",
+        "depth": 1
+      },
+      "label": "Quais chamadas calculate_total faz?",
+      "group": "Analisar impacto",
+      "result": {
+        "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+        "nodes": [
+          {
+            "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "name": "calculate_total",
+            "qualified_name": "calculate_total",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 11,
+            "end_line": 14,
+            "distance": 0
+          },
+          {
+            "symbol_id": "sym_81859398a791c16e8ceb4fbef5c9a321",
+            "name": "apply_discount",
+            "qualified_name": "apply_discount",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 4,
+            "end_line": 8,
+            "distance": 1
+          }
+        ],
+        "edges": [
+          {
+            "source": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "target": "sym_81859398a791c16e8ceb4fbef5c9a321",
+            "evidence": [
+              {
+                "reference": "apply_discount",
+                "line": 11,
+                "resolution": "static_candidate"
+              }
+            ],
+            "evidence_count": 1,
+            "evidence_truncated": false
+          }
+        ],
+        "direction": "callees",
+        "depth": 1,
+        "truncated": false,
+        "depth_limited": false,
+        "metadata_missing_count": 0,
+        "limitations": [
+          "Only syntactic metadata and unambiguous local/imported names are resolved; dynamic dispatch, reexports, default-export aliases, runtime imports and external symbols can be unresolved."
+        ],
+        "unresolved": [
+          {
+            "source": "sym_81859398a791c16e8ceb4fbef5c9a321",
+            "reference": "ValueError",
+            "status": "unresolved",
+            "candidates": [],
+            "candidate_count": 0,
+            "candidates_truncated": false
+          },
+          {
+            "source": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "reference": "sum",
+            "status": "unresolved",
+            "candidates": [],
+            "candidate_count": 0,
+            "candidates_truncated": false
+          }
+        ],
+        "unresolved_count": 2,
+        "unresolved_counts": {
+          "unresolved": 2
+        },
+        "unresolved_truncated": false,
+        "semantics": "Static candidates from admitted snapshot metadata; no compiler resolution. Edges point from importer/caller/derived class to dependency/callee/base class. Unresolved or absent edges do not establish that changes or deletion are safe. External/missing imports were not resolved inside this snapshot and may refer to excluded files. Python package symbols that collide with child modules remain ambiguous. Bash relative source paths require runtime CWD, and bare names can use PATH; neither is proven by this snapshot, so they remain runtime_context without file edges.",
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "search_symbols",
+      "args": {
+        "query": "Order",
+        "kind": null
+      },
+      "label": "Descobrir o ID de Order",
+      "group": "Preparar IDs",
+      "result": {
+        "result_count": 5,
+        "results": [
+          {
+            "name": "Order",
+            "kind": "class",
+            "file": "shop/models.py",
+            "line": 4,
+            "signature": "class Order",
+            "summary": "Base order.",
+            "end_line": 8,
+            "qualified_name": "Order",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "start_byte": 54,
+            "end_byte": 143,
+            "source_start_line": 4,
+            "symbol_id": "sym_d6ddb47b80f8bbad6fd668cd846b57e5",
+            "id": "shop/models.py:4",
+            "match_type": "exact"
+          },
+          {
+            "name": "status",
+            "kind": "function",
+            "file": "shop/models.py",
+            "line": 7,
+            "signature": "def status(self) -> str",
+            "summary": "",
+            "end_line": 8,
+            "qualified_name": "Order.status",
+            "language": "python",
+            "parent": "Order",
+            "decorators": [],
+            "start_byte": 94,
+            "end_byte": 143,
+            "source_start_line": 7,
+            "symbol_id": "sym_9b0a4d804d37738a2878c1cd4d4a61c0",
+            "id": "shop/models.py:7",
+            "match_type": "lexical"
+          },
+          {
+            "name": "discount_percent",
+            "kind": "function",
+            "file": "shop/models.py",
+            "line": 14,
+            "signature": "def discount_percent(self) -> int",
+            "summary": "",
+            "end_line": 15,
+            "qualified_name": "DiscountedOrder.discount_percent",
+            "language": "python",
+            "parent": "DiscountedOrder",
+            "decorators": [],
+            "start_byte": 221,
+            "end_byte": 273,
+            "source_start_line": 14,
+            "symbol_id": "sym_36ed3914cb60d4d785314b24613aee59",
+            "id": "shop/models.py:14",
+            "match_type": "lexical"
+          },
+          {
+            "name": "DiscountedOrder",
+            "kind": "class",
+            "file": "shop/models.py",
+            "line": 11,
+            "signature": "class DiscountedOrder(Order)",
+            "summary": "Order with a discount policy.",
+            "end_line": 15,
+            "qualified_name": "DiscountedOrder",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "start_byte": 146,
+            "end_byte": 273,
+            "source_start_line": 11,
+            "symbol_id": "sym_e2542f94560a3fa9b714c7c16731722c",
+            "id": "shop/models.py:11",
+            "match_type": "lexical"
+          },
+          {
+            "name": "create_order",
+            "kind": "function",
+            "file": "shop/api.py",
+            "line": 6,
+            "signature": "def create_order(prices: list[int]) -> dict",
+            "summary": "Prepare an order using the checkout module.",
+            "end_line": 8,
+            "qualified_name": "create_order",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "start_byte": 82,
+            "end_byte": 208,
+            "source_start_line": 6,
+            "symbol_id": "sym_d4f5c2bb3f362989084318429a1d3fd3",
+            "id": "shop/api.py:6",
+            "match_type": "lexical"
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_class_hierarchy",
+      "args": {
+        "repo": "local",
+        "symbol_id": "sym_d6ddb47b80f8bbad6fd668cd846b57e5",
+        "direction": "subclasses",
+        "depth": 1
+      },
+      "label": "Quais subclasses declaradas de Order foram encontradas?",
+      "group": "Analisar impacto",
+      "result": {
+        "symbol_id": "sym_d6ddb47b80f8bbad6fd668cd846b57e5",
+        "nodes": [
+          {
+            "symbol_id": "sym_d6ddb47b80f8bbad6fd668cd846b57e5",
+            "name": "Order",
+            "qualified_name": "Order",
+            "kind": "class",
+            "file": "shop/models.py",
+            "line": 4,
+            "end_line": 8,
+            "distance": 0
+          },
+          {
+            "symbol_id": "sym_e2542f94560a3fa9b714c7c16731722c",
+            "name": "DiscountedOrder",
+            "qualified_name": "DiscountedOrder",
+            "kind": "class",
+            "file": "shop/models.py",
+            "line": 11,
+            "end_line": 15,
+            "distance": 1
+          }
+        ],
+        "edges": [
+          {
+            "source": "sym_e2542f94560a3fa9b714c7c16731722c",
+            "target": "sym_d6ddb47b80f8bbad6fd668cd846b57e5",
+            "evidence": [
+              {
+                "reference": "Order",
+                "line": 11,
+                "resolution": "static_candidate"
+              }
+            ],
+            "evidence_count": 1,
+            "evidence_truncated": false
+          }
+        ],
+        "direction": "subclasses",
+        "depth": 1,
+        "truncated": false,
+        "depth_limited": false,
+        "metadata_missing_count": 0,
+        "limitations": [
+          "Only syntactic metadata and unambiguous local/imported names are resolved; dynamic dispatch, reexports, default-export aliases, runtime imports and external symbols can be unresolved."
+        ],
+        "unresolved": [],
+        "unresolved_count": 0,
+        "unresolved_counts": {},
+        "unresolved_truncated": false,
+        "semantics": "Static candidates from admitted snapshot metadata; no compiler resolution. Edges point from importer/caller/derived class to dependency/callee/base class. Unresolved or absent edges do not establish that changes or deletion are safe. External/missing imports were not resolved inside this snapshot and may refer to excluded files. Python package symbols that collide with child modules remain ambiguous. Bash relative source paths require runtime CWD, and bare names can use PATH; neither is proven by this snapshot, so they remain runtime_context without file edges.",
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "index_directory",
+      "args": {
+        "path": "."
+      },
+      "label": "Atualize o índice desta pasta local.",
+      "group": "Manter o índice",
+      "result": {
+        "status": "ok",
+        "repo": "local",
+        "files": 8,
+        "updated": 0,
+        "unchanged": 8,
+        "deleted": 0,
+        "skipped": 0,
+        "truncated": false,
+        "diagnostics": [],
+        "bytes": 2752,
+        "read_files": 0,
+        "read_bytes": 0,
+        "reused_files": 8,
+        "policy_reads": 0,
+        "policy_read_bytes": 0,
+        "indexed_at": 1794184889.274001,
+        "last_change_at": 1794184888.9102554,
+        "generation": 1,
+        "parser_revision": "2-rich-symbols-3",
+        "coverage": {
+          "scope": "admitted workspace files",
+          "complete": true,
+          "indexed_files": 8,
+          "parsed_files": 8,
+          "text_files": 0,
+          "parser_errors": 0,
+          "symbols": 11,
+          "imports": 4
+        }
+      }
+    },
+    {
+      "tool": "index_repo",
+      "args": {
+        "url": ".",
+        "use_ai_summaries": false
+      },
+      "label": "Indexe o repositório local configurado.",
+      "group": "Manter o índice",
+      "result": {
+        "status": "ok",
+        "repo": "local",
+        "files": 8,
+        "updated": 0,
+        "unchanged": 8,
+        "deleted": 0,
+        "skipped": 0,
+        "truncated": false,
+        "diagnostics": [],
+        "bytes": 2752,
+        "read_files": 0,
+        "read_bytes": 0,
+        "reused_files": 8,
+        "policy_reads": 0,
+        "policy_read_bytes": 0,
+        "indexed_at": 1794184889.3036735,
+        "last_change_at": 1794184888.9102554,
+        "generation": 1,
+        "parser_revision": "2-rich-symbols-3",
+        "coverage": {
+          "scope": "admitted workspace files",
+          "complete": true,
+          "indexed_files": 8,
+          "parsed_files": 8,
+          "text_files": 0,
+          "parser_errors": 0,
+          "symbols": 11,
+          "imports": 4
+        }
+      }
+    },
+    {
+      "tool": "refresh_index",
+      "args": {
+        "force": false
+      },
+      "label": "Acabei de salvar uma alteração. Atualize o índice agora.",
+      "group": "Manter o índice",
+      "result": {
+        "status": "ok",
+        "repo": "local",
+        "files": 8,
+        "updated": 0,
+        "unchanged": 8,
+        "deleted": 0,
+        "skipped": 0,
+        "truncated": false,
+        "diagnostics": [],
+        "bytes": 2752,
+        "read_files": 0,
+        "read_bytes": 0,
+        "reused_files": 8,
+        "policy_reads": 0,
+        "policy_read_bytes": 0,
+        "indexed_at": 1794184889.3322399,
+        "last_change_at": 1794184888.9102554,
+        "generation": 1,
+        "parser_revision": "2-rich-symbols-3",
+        "coverage": {
+          "scope": "admitted workspace files",
+          "complete": true,
+          "indexed_files": 8,
+          "parsed_files": 8,
+          "text_files": 0,
+          "parser_errors": 0,
+          "symbols": 11,
+          "imports": 4
+        }
+      }
+    },
+    {
+      "tool": "get_index_status",
+      "args": {},
+      "label": "O índice está completo? Existem erros de parsing ou limites atingidos?",
+      "group": "Manter o índice",
+      "result": {
+        "status": "ok",
+        "repo": "local",
+        "files": 8,
+        "updated": 0,
+        "unchanged": 8,
+        "deleted": 0,
+        "skipped": 0,
+        "truncated": false,
+        "diagnostics": [],
+        "bytes": 2752,
+        "read_files": 0,
+        "read_bytes": 0,
+        "reused_files": 8,
+        "policy_reads": 0,
+        "policy_read_bytes": 0,
+        "indexed_at": 1794184889.3322399,
+        "last_change_at": 1794184888.9102554,
+        "generation": 1,
+        "parser_revision": "2-rich-symbols-3",
+        "coverage": {
+          "scope": "admitted workspace files",
+          "complete": true,
+          "indexed_files": 8,
+          "parsed_files": 8,
+          "text_files": 0,
+          "parser_errors": 0,
+          "symbols": 11,
+          "imports": 4
+        },
+        "workspace": "manual-project",
+        "symbols": 11,
+        "scan_interval_seconds": 3600.0,
+        "limits": {
+          "file_bytes": 1048576,
+          "files": 50000,
+          "total_bytes": 134217728
+        },
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_index_changes",
+      "args": {},
+      "label": "Quais arquivos mudaram na última atualização significativa do índice?",
+      "group": "Manter o índice",
+      "result": {
+        "generation": 1,
+        "previous_generation": 0,
+        "changed_at": 1794184888.9102554,
+        "added": [
+          "README.md",
+          "shop/__init__.py",
+          "shop/api.py",
+          "shop/checkout.py",
+          "shop/cycle_a.py",
+          "shop/cycle_b.py",
+          "shop/models.py",
+          "shop/pricing.py"
+        ],
+        "modified": [],
+        "deleted": [],
+        "reparsed": [],
+        "counts": {
+          "added": 8,
+          "modified": 0,
+          "deleted": 0,
+          "reparsed": 0
+        },
+        "truncated": false,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "find_file",
+      "args": {
+        "pattern": "**/*.py",
+        "max_results": 2
+      },
+      "label": "Página 1: dois arquivos Python",
+      "group": "Paginação e limites",
+      "result": {
+        "repo": "local",
+        "matches": [
+          {
+            "path": "shop/__init__.py",
+            "language": "python",
+            "size": 58
+          },
+          {
+            "path": "shop/api.py",
+            "language": "python",
+            "size": 209
+          }
+        ],
+        "truncated": true,
+        "next_offset": 2,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "find_file",
+      "args": {
+        "pattern": "**/*.py",
+        "max_results": 2,
+        "offset": 2
+      },
+      "label": "Página 2: continuar com next_offset",
+      "group": "Paginação e limites",
+      "result": {
+        "repo": "local",
+        "matches": [
+          {
+            "path": "shop/checkout.py",
+            "language": "python",
+            "size": 251
+          },
+          {
+            "path": "shop/cycle_a.py",
+            "language": "python",
+            "size": 145
+          }
+        ],
+        "truncated": true,
+        "next_offset": 4,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_file_content",
+      "args": {
+        "file_path": "shop/pricing.py",
+        "max_chars": 80
+      },
+      "label": "Leitura curta: observar next_cursor",
+      "group": "Paginação e limites",
+      "result": {
+        "file": "shop/pricing.py",
+        "content": "\"\"\"Calculate order totals in integer cents.\"\"\"\n\n\ndef apply_discount(subtotal: in",
+        "start_line": 1,
+        "end_line": 4,
+        "total_lines": 14,
+        "truncated": true,
+        "line_truncated": true,
+        "next_start_line": 4,
+        "next_cursor": "eyJnIjoxLCJmIjoic2hvcC9wcmljaW5nLnB5IiwicCI6ODAsImUiOjQ4NH0=",
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_file_content",
+      "args": {
+        "file_path": "shop/pricing.py",
+        "cursor": "eyJnIjoxLCJmIjoic2hvcC9wcmljaW5nLnB5IiwicCI6ODAsImUiOjQ4NH0=",
+        "max_chars": 4000
+      },
+      "label": "Continuar a leitura pelo cursor",
+      "group": "Paginação e limites",
+      "result": {
+        "file": "shop/pricing.py",
+        "content": "t, percent: int) -> int:\n    \"\"\"Apply an integer discount percentage.\"\"\"\n    if not 0 <= percent <= 100:\n        raise ValueError(\"Invalid discount percentage\")\n    return subtotal * (100 - percent) // 100\n\n\ndef calculate_total(prices: list[int], discount: int = 0) -> int:\n    \"\"\"Calculate the discounted total for a checkout.\"\"\"\n    subtotal = sum(prices)\n    return apply_discount(subtotal, discount)\n",
+        "start_line": 4,
+        "end_line": 14,
+        "total_lines": 14,
+        "truncated": false,
+        "line_truncated": false,
+        "next_start_line": null,
+        "next_cursor": null,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "get_symbol_source",
+      "args": {
+        "symbol_ids": [
+          "sym_beb8046a7555aa7368865e7a3527eac0",
+          "missing-demo-id"
+        ],
+        "max_chars": 8000
+      },
+      "label": "Um ID válido e um inválido: observar o erro parcial",
+      "group": "Paginação e limites",
+      "result": {
+        "errors": [
+          {
+            "symbol_id": "missing-demo-id",
+            "error": "Symbol not found"
+          }
+        ],
+        "error_count": 1,
+        "_meta": {
+          "generation": 1,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 11,
+            "imports": 4
+          },
+          "index_truncated": false
+        },
+        "results": [
+          {
+            "name": "calculate_total",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 11,
+            "signature": "def calculate_total(prices: list[int], discount: int=0) -> int",
+            "end_line": 14,
+            "qualified_name": "calculate_total",
+            "symbol_id": "sym_beb8046a7555aa7368865e7a3527eac0",
+            "id": "shop/pricing.py:11",
+            "source_cursor": "eyJnIjoxLCJmIjoic2hvcC9wcmljaW5nLnB5IiwicCI6Mjg4LCJlIjo0ODN9",
+            "source_truncated": false,
+            "next_cursor": null,
+            "source": "def calculate_total(prices: list[int], discount: int = 0) -> int:\n    \"\"\"Calculate the discounted total for a checkout.\"\"\"\n    subtotal = sum(prices)\n    return apply_discount(subtotal, discount)",
+            "source_start_line": 11
+          }
+        ],
+        "budget": {
+          "limit_chars": 8000,
+          "used_chars": 1100
+        },
+        "truncated": false,
+        "omitted_count": 0
+      }
+    },
+    {
+      "tool": "refresh_index",
+      "args": {
+        "force": false
+      },
+      "label": "Atualizar após uma edição na cópia temporária",
+      "group": "Atualização incremental",
+      "result": {
+        "status": "ok",
+        "repo": "local",
+        "files": 8,
+        "updated": 1,
+        "unchanged": 7,
+        "deleted": 0,
+        "skipped": 0,
+        "truncated": false,
+        "diagnostics": [],
+        "bytes": 2846,
+        "read_files": 1,
+        "read_bytes": 578,
+        "reused_files": 7,
+        "policy_reads": 0,
+        "policy_read_bytes": 0,
+        "indexed_at": 1794184889.4082248,
+        "last_change_at": 1794184889.4082248,
+        "generation": 2,
+        "parser_revision": "2-rich-symbols-3",
+        "coverage": {
+          "scope": "admitted workspace files",
+          "complete": true,
+          "indexed_files": 8,
+          "parsed_files": 8,
+          "text_files": 0,
+          "parser_errors": 0,
+          "symbols": 12,
+          "imports": 4
+        }
+      }
+    },
+    {
+      "tool": "get_index_changes",
+      "args": {},
+      "label": "Ver o delta da edição simulada",
+      "group": "Atualização incremental",
+      "result": {
+        "generation": 2,
+        "previous_generation": 1,
+        "changed_at": 1794184889.4082248,
+        "added": [],
+        "modified": [
+          "shop/pricing.py"
+        ],
+        "deleted": [],
+        "reparsed": [],
+        "counts": {
+          "added": 0,
+          "modified": 1,
+          "deleted": 0,
+          "reparsed": 0
+        },
+        "truncated": false,
+        "_meta": {
+          "generation": 2,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 12,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "search_symbols",
+      "args": {
+        "query": "shipping_fee",
+        "kind": null
+      },
+      "label": "Encontrar shipping_fee sem commit",
+      "group": "Atualização incremental",
+      "result": {
+        "result_count": 1,
+        "results": [
+          {
+            "name": "shipping_fee",
+            "kind": "function",
+            "file": "shop/pricing.py",
+            "line": 17,
+            "signature": "def shipping_fee() -> int",
+            "summary": "Added during the demo.",
+            "end_line": 19,
+            "qualified_name": "shipping_fee",
+            "language": "python",
+            "parent": null,
+            "decorators": [],
+            "start_byte": 502,
+            "end_byte": 576,
+            "source_start_line": 17,
+            "symbol_id": "sym_21dd1e18cc033c9a78c199c070f796eb",
+            "id": "shop/pricing.py:17",
+            "match_type": "exact"
+          }
+        ],
+        "truncated": false,
+        "next_offset": null,
+        "_meta": {
+          "generation": 2,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 12,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    },
+    {
+      "tool": "refresh_index",
+      "args": {
+        "force": true
+      },
+      "label": "Verificação integral opcional",
+      "group": "Atualização incremental",
+      "result": {
+        "status": "ok",
+        "repo": "local",
+        "files": 8,
+        "updated": 8,
+        "unchanged": 0,
+        "deleted": 0,
+        "skipped": 0,
+        "truncated": false,
+        "diagnostics": [],
+        "bytes": 2846,
+        "read_files": 8,
+        "read_bytes": 2846,
+        "reused_files": 0,
+        "policy_reads": 0,
+        "policy_read_bytes": 0,
+        "indexed_at": 1794184889.456033,
+        "last_change_at": 1794184889.4082248,
+        "generation": 3,
+        "parser_revision": "2-rich-symbols-3",
+        "coverage": {
+          "scope": "admitted workspace files",
+          "complete": true,
+          "indexed_files": 8,
+          "parsed_files": 8,
+          "text_files": 0,
+          "parser_errors": 0,
+          "symbols": 12,
+          "imports": 4
+        }
+      }
+    },
+    {
+      "tool": "get_index_status",
+      "args": {},
+      "label": "Conferir o índice ao final",
+      "group": "Atualização incremental",
+      "result": {
+        "status": "ok",
+        "repo": "local",
+        "files": 8,
+        "updated": 8,
+        "unchanged": 0,
+        "deleted": 0,
+        "skipped": 0,
+        "truncated": false,
+        "diagnostics": [],
+        "bytes": 2846,
+        "read_files": 8,
+        "read_bytes": 2846,
+        "reused_files": 0,
+        "policy_reads": 0,
+        "policy_read_bytes": 0,
+        "indexed_at": 1794184889.456033,
+        "last_change_at": 1794184889.4082248,
+        "generation": 3,
+        "parser_revision": "2-rich-symbols-3",
+        "coverage": {
+          "scope": "admitted workspace files",
+          "complete": true,
+          "indexed_files": 8,
+          "parsed_files": 8,
+          "text_files": 0,
+          "parser_errors": 0,
+          "symbols": 12,
+          "imports": 4
+        },
+        "workspace": "manual-project",
+        "symbols": 12,
+        "scan_interval_seconds": 3600.0,
+        "limits": {
+          "file_bytes": 1048576,
+          "files": 50000,
+          "total_bytes": 134217728
+        },
+        "_meta": {
+          "generation": 3,
+          "coverage": {
+            "scope": "admitted workspace files",
+            "complete": true,
+            "indexed_files": 8,
+            "parsed_files": 8,
+            "text_files": 0,
+            "parser_errors": 0,
+            "symbols": 12,
+            "imports": 4
+          },
+          "index_truncated": false
+        }
+      }
+    }
+  ]
+}

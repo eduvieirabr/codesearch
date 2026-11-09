@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "codesearch": {
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile", "-File",
+        "C:\\git\\pessoal\\codeSearch\\scripts\\run.ps1",
+        "-Workspace", "C:\\caminho\\do\\projeto",
+        "-Transport", "stdio"
+      ]
+    }
+  }
+}

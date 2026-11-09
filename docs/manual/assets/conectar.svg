@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="330" viewBox="0 0 1200 330" role="img" aria-labelledby="title desc">
+  <title id="title">Quatro passos para conectar</title>
+  <desc id="desc">Escolha o workspace, inicie por Python ou Podman, cadastre a URL no cliente e valide health mais as 26 ferramentas. HTTP usa porta 8091 neste guia; stdio é uma alternativa sem porta.</desc>
+  <rect width="1200" height="330" rx="24" fill="#f0edf8"/>
+  <g font-family="Segoe UI,Arial,sans-serif" fill="#33275a">
+    <text x="36" y="46" font-size="13" font-weight="700" letter-spacing="2">02 / CONEXÃO LOCAL</text>
+    <text x="36" y="88" font-size="27" font-weight="600">Da pasta de código à primeira chamada.</text>
+    <path d="M92 151H1090" fill="none" stroke="#b8a9d9" stroke-width="2"/>
+    <g fill="#62499b"><circle cx="72" cy="151" r="23"/><circle cx="365" cy="151" r="23"/><circle cx="657" cy="151" r="23"/><circle cx="949" cy="151" r="23"/></g>
+    <g fill="white" font-size="18" font-weight="700" text-anchor="middle"><text x="72" y="157">1</text><text x="365" y="157">2</text><text x="657" y="157">3</text><text x="949" y="157">4</text></g>
+    <g font-size="22" font-weight="600"><text x="49" y="211">Escolha a pasta</text><text x="342" y="211">Inicie o servidor</text><text x="634" y="211">Cadastre no cliente</text><text x="926" y="211">Valide a conexão</text></g>
+    <g font-size="15"><text x="49" y="242">Seu projeto ou a demo</text><text x="342" y="242">Python + uv ou Podman</text><text x="634" y="242">HTTP → 127.0.0.1:8091/mcp</text><text x="926" y="242">Health + 26 ferramentas</text></g>
+    <text x="36" y="303" font-size="14" fill="#64537e">Alternativa stdio: o cliente inicia o processo e conversa por entrada/saída padrão, sem uma porta HTTP.</text>
+  </g>
+</svg>
